@@ -1,0 +1,60 @@
+<!DOCTYPE html>  <!-- <!DOCTYPE html> -->
+<html lang="en">  <!-- <html lang="en"> -->
+  <!-- blank line -->
+<head>  <!-- <head> -->
+    <meta charset="UTF-8">  <!-- <meta charset="UTF-8"> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+    <title>Login - System Monitor</title>  <!-- <title>Login - System Monitor</title> -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">  <!-- <link rel="preconnect" href="https://fonts.googleapis.com"> -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>  <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">  <!-- <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"> -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">  <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> -->
+</head>  <!-- </head> -->
+  <!-- blank line -->
+<body class="auth-page">  <!-- <body class="auth-page"> -->
+    <div class="auth-container">  <!-- <div class="auth-container"> -->
+        <div class="auth-card">  <!-- <div class="auth-card"> -->
+            <div class="auth-header">  <!-- <div class="auth-header"> -->
+                <h1>System Monitor</h1>  <!-- <h1>System Monitor</h1> -->
+                <p>Sign in to your account</p>  <!-- <p>Sign in to your account</p> -->
+            </div>  <!-- </div> -->
+  <!-- blank line -->
+            {% with messages = get_flashed_messages(with_categories=true) %}  <!-- {% with messages = get_flashed_messages(with_categories=true) %} -->
+            {% if messages %}  <!-- {% if messages %} -->
+            {% for category, message in messages %}  <!-- {% for category, message in messages %} -->
+            <div class="flash-message flash-{{ category }}">  <!-- <div class="flash-message flash-{{ category }}"> -->
+                {{ message }}  <!-- {{ message }} -->
+            </div>  <!-- </div> -->
+            {% endfor %}  <!-- {% endfor %} -->
+            {% endif %}  <!-- {% endif %} -->
+            {% endwith %}  <!-- {% endwith %} -->
+  <!-- blank line -->
+            <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form">  <!-- <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form"> -->
+                <div class="form-group">  <!-- <div class="form-group"> -->
+                    <label for="username">Username</label>  <!-- <label for="username">Username</label> -->
+                    <input type="text" id="username" name="username" required autofocus>  <!-- <input type="text" id="username" name="username" required autofocus> -->
+                </div>  <!-- </div> -->
+  <!-- blank line -->
+                <div class="form-group">  <!-- <div class="form-group"> -->
+                    <label for="password">Password</label>  <!-- <label for="password">Password</label> -->
+                    <input type="password" id="password" name="password" required>  <!-- <input type="password" id="password" name="password" required> -->
+                </div>  <!-- </div> -->
+  <!-- blank line -->
+                <div class="form-group checkbox-group">  <!-- <div class="form-group checkbox-group"> -->
+                    <label>  <!-- <label> -->
+                        <input type="checkbox" name="remember" value="true">  <!-- <input type="checkbox" name="remember" value="true"> -->
+                        <span>Remember me</span>  <!-- <span>Remember me</span> -->
+                    </label>  <!-- </label> -->
+                </div>  <!-- </div> -->
+  <!-- blank line -->
+                <button type="submit" class="btn-primary">Sign In</button>  <!-- <button type="submit" class="btn-primary">Sign In</button> -->
+            </form>  <!-- </form> -->
+  <!-- blank line -->
+            <div class="auth-footer">  <!-- <div class="auth-footer"> -->
+                <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Sign up</a></p>  <!-- <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Sign up</a></p> -->
+            </div>  <!-- </div> -->
+        </div>  <!-- </div> -->
+    </div>  <!-- </div> -->
+</body>  <!-- </body> -->
+  <!-- blank line -->
+</html>  <!-- </html> -->

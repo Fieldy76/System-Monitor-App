@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>  <!-- <!DOCTYPE HTML> -->
+<html lang="en">  <!-- <html lang="en"> -->
+  <!-- blank line -->
+<head>  <!-- <head> -->
+    <meta charset="UTF-8">  <!-- <meta charset="UTF-8"> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+    <title>{% block title %}System Monitor{% endblock %}</title>  <!-- <title>{% block title %}System Monitor{% endblock %}</title> -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">  <!-- <link rel="preconnect" href="https://fonts.googleapis.com"> -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>  <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">  <!-- <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"> -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">  <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> -->
+    {% block extra_css %}{% endblock %}  <!-- {% block extra_css %}{% endblock %} -->
+</head>  <!-- </head> -->
+  <!-- blank line -->
+<body>  <!-- <body> -->
+    {% if current_user.is_authenticated %}  <!-- {% if current_user.is_authenticated %} -->
+    <!-- Sidebar Navigation -->  <!-- <!-- Sidebar Navigation --> -->
+    <nav class="sidebar">  <!-- <nav class="sidebar"> -->
+        <div class="sidebar-header">  <!-- <div class="sidebar-header"> -->
+            <h2>System Monitor</h2>  <!-- <h2>System Monitor</h2> -->
+        </div>  <!-- </div> -->
+        <ul class="nav-menu">  <!-- <ul class="nav-menu"> -->
+            <li><a href="{{ url_for('main.index') }}"  <!-- <li><a href="{{ url_for('main.index') }}" -->
+                    class="{% if request.endpoint == 'main.index' %}active{% endif %}">  <!-- class="{% if request.endpoint == 'main.index' %}active{% endif %}"> -->
+                    <span class="icon">📊</span> Dashboard  <!-- <span class="icon">📊</span> Dashboard -->
+                </a></li>  <!-- </a></li> -->
+            <li><a href="{{ url_for('main.processes') }}"  <!-- <li><a href="{{ url_for('main.processes') }}" -->
+                    class="{% if request.endpoint == 'main.processes' %}active{% endif %}">  <!-- class="{% if request.endpoint == 'main.processes' %}active{% endif %}"> -->
+                    <span class="icon">⚙️</span> Processes  <!-- <span class="icon">⚙️</span> Processes -->
+                </a></li>  <!-- </a></li> -->
+            <li><a href="{{ url_for('main.alerts_page') }}"  <!-- <li><a href="{{ url_for('main.alerts_page') }}" -->
+                    class="{% if request.endpoint == 'main.alerts_page' %}active{% endif %}">  <!-- class="{% if request.endpoint == 'main.alerts_page' %}active{% endif %}"> -->
+                    <span class="icon">🔔</span> Alerts  <!-- <span class="icon">🔔</span> Alerts -->
+                </a></li>  <!-- </a></li> -->
+            <li><a href="{{ url_for('main.servers_page') }}"  <!-- <li><a href="{{ url_for('main.servers_page') }}" -->
+                    class="{% if request.endpoint == 'main.servers_page' %}active{% endif %}">  <!-- class="{% if request.endpoint == 'main.servers_page' %}active{% endif %}"> -->
+                    <span class="icon">🖥️</span> Servers  <!-- <span class="icon">🖥️</span> Servers -->
+                </a></li>  <!-- </a></li> -->
+            <li><a href="{{ url_for('main.health_dashboard') }}"  <!-- <li><a href="{{ url_for('main.health_dashboard') }}" -->
+                    class="{% if request.endpoint == 'main.health_dashboard' %}active{% endif %}">  <!-- class="{% if request.endpoint == 'main.health_dashboard' %}active{% endif %}"> -->
+                    <span class="icon">❤️</span> Health  <!-- <span class="icon">❤️</span> Health -->
+                </a></li>  <!-- </a></li> -->
+            <li><a href="{{ url_for('main.settings') }}"  <!-- <li><a href="{{ url_for('main.settings') }}" -->
+                    class="{% if request.endpoint == 'main.settings' %}active{% endif %}">  <!-- class="{% if request.endpoint == 'main.settings' %}active{% endif %}"> -->
+                    <span class="icon">⚙️</span> Settings  <!-- <span class="icon">⚙️</span> Settings -->
+                </a></li>  <!-- </a></li> -->
+        </ul>  <!-- </ul> -->
+        <div class="sidebar-footer">  <!-- <div class="sidebar-footer"> -->
+            <div class="user-info">  <!-- <div class="user-info"> -->
+                <span class="user-name">{{ current_user.username }}</span>  <!-- <span class="user-name">{{ current_user.username }}</span> -->
+                {% if current_user.is_admin %}<span class="admin-badge">Admin</span>{% endif %}  <!-- {% if current_user.is_admin %}<span class="admin-badge">Admin</span>{% endif %} -->
+            </div>  <!-- </div> -->
+            <a href="{{ url_for('auth.profile') }}" class="profile-link">Profile</a>  <!-- <a href="{{ url_for('auth.profile') }}" class="profile-link">Profile</a> -->
+            <a href="{{ url_for('auth.logout') }}" class="logout-link">Logout</a>  <!-- <a href="{{ url_for('auth.logout') }}" class="logout-link">Logout</a> -->
+        </div>  <!-- </div> -->
+    </nav>  <!-- </nav> -->
+    {% endif %}  <!-- {% endif %} -->
+  <!-- blank line -->
+    <!-- Main Content -->  <!-- <!-- Main Content --> -->
+    <div class="main-content {% if not current_user.is_authenticated %}no-sidebar{% endif %}">  <!-- <div class="main-content {% if not current_user.is_authenticated %}no-sidebar{% endif %}"> -->
+        <!-- Flash Messages -->  <!-- <!-- Flash Messages --> -->
+        {% with messages = get_flashed_messages(with_categories=true) %}  <!-- {% with messages = get_flashed_messages(with_categories=true) %} -->
+        {% if messages %}  <!-- {% if messages %} -->
+        <div class="flash-messages">  <!-- <div class="flash-messages"> -->
+            {% for category, message in messages %}  <!-- {% for category, message in messages %} -->
+            <div class="flash-message flash-{{ category }}">  <!-- <div class="flash-message flash-{{ category }}"> -->
+                {{ message }}  <!-- {{ message }} -->
+                <button class="close-flash" onclick="this.parentElement.remove()">×</button>  <!-- <button class="close-flash" onclick="this.parentElement.remove()">×</button> -->
+            </div>  <!-- </div> -->
+            {% endfor %}  <!-- {% endfor %} -->
+        </div>  <!-- </div> -->
+        {% endif %}  <!-- {% endif %} -->
+        {% endwith %}  <!-- {% endwith %} -->
+  <!-- blank line -->
+        {% block content %}{% endblock %}  <!-- {% block content %}{% endblock %} -->
+    </div>  <!-- </div> -->
+  <!-- blank line -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+    {% block extra_js %}{% endblock %}  <!-- {% block extra_js %}{% endblock %} -->
+</body>  <!-- </body> -->
+  <!-- blank line -->
+</html>  <!-- </html> -->

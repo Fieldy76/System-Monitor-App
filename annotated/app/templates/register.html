@@ -1,0 +1,84 @@
+<!DOCTYPE html>  <!-- <!DOCTYPE html> -->
+<html lang="en">  <!-- <html lang="en"> -->
+  <!-- blank line -->
+<head>  <!-- <head> -->
+    <meta charset="UTF-8">  <!-- <meta charset="UTF-8"> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+    <title>Register - System Monitor</title>  <!-- <title>Register - System Monitor</title> -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">  <!-- <link rel="preconnect" href="https://fonts.googleapis.com"> -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>  <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">  <!-- <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"> -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">  <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> -->
+</head>  <!-- </head> -->
+  <!-- blank line -->
+<body class="auth-page">  <!-- <body class="auth-page"> -->
+    <div class="auth-container">  <!-- <div class="auth-container"> -->
+        <div class="auth-card">  <!-- <div class="auth-card"> -->
+            <div class="auth-header">  <!-- <div class="auth-header"> -->
+                <h1>System Monitor</h1>  <!-- <h1>System Monitor</h1> -->
+                <p>Create your account</p>  <!-- <p>Create your account</p> -->
+            </div>  <!-- </div> -->
+  <!-- blank line -->
+            {% with messages = get_flashed_messages(with_categories=true) %}  <!-- {% with messages = get_flashed_messages(with_categories=true) %} -->
+            {% if messages %}  <!-- {% if messages %} -->
+            {% for category, message in messages %}  <!-- {% for category, message in messages %} -->
+            <div class="flash-message flash-{{ category }}">  <!-- <div class="flash-message flash-{{ category }}"> -->
+                {{ message }}  <!-- {{ message }} -->
+            </div>  <!-- </div> -->
+            {% endfor %}  <!-- {% endfor %} -->
+            {% endif %}  <!-- {% endif %} -->
+            {% endwith %}  <!-- {% endwith %} -->
+  <!-- blank line -->
+            <form method="POST" action="{{ url_for('auth.register') }}" class="auth-form" id="registerForm">  <!-- <form method="POST" action="{{ url_for('auth.register') }}" class="auth-form" id="registerForm"> -->
+                <div class="form-group">  <!-- <div class="form-group"> -->
+                    <label for="username">Username</label>  <!-- <label for="username">Username</label> -->
+                    <input type="text" id="username" name="username" required autofocus>  <!-- <input type="text" id="username" name="username" required autofocus> -->
+                    <span class="form-hint" id="usernameHint"></span>  <!-- <span class="form-hint" id="usernameHint"></span> -->
+                </div>  <!-- </div> -->
+  <!-- blank line -->
+                <div class="form-group">  <!-- <div class="form-group"> -->
+                    <label for="email">Email</label>  <!-- <label for="email">Email</label> -->
+                    <input type="email" id="email" name="email" required>  <!-- <input type="email" id="email" name="email" required> -->
+                    <span class="form-hint" id="emailHint"></span>  <!-- <span class="form-hint" id="emailHint"></span> -->
+                </div>  <!-- </div> -->
+  <!-- blank line -->
+                <div class="form-group">  <!-- <div class="form-group"> -->
+                    <label for="password">Password</label>  <!-- <label for="password">Password</label> -->
+                    <input type="password" id="password" name="password" required minlength="8">  <!-- <input type="password" id="password" name="password" required minlength="8"> -->
+                    <span class="form-hint">At least 8 characters</span>  <!-- <span class="form-hint">At least 8 characters</span> -->
+                </div>  <!-- </div> -->
+  <!-- blank line -->
+                <div class="form-group">  <!-- <div class="form-group"> -->
+                    <label for="confirm_password">Confirm Password</label>  <!-- <label for="confirm_password">Confirm Password</label> -->
+                    <input type="password" id="confirm_password" name="confirm_password" required>  <!-- <input type="password" id="confirm_password" name="confirm_password" required> -->
+                    <span class="form-hint" id="passwordHint"></span>  <!-- <span class="form-hint" id="passwordHint"></span> -->
+                </div>  <!-- </div> -->
+  <!-- blank line -->
+                <button type="submit" class="btn-primary">Create Account</button>  <!-- <button type="submit" class="btn-primary">Create Account</button> -->
+            </form>  <!-- </form> -->
+  <!-- blank line -->
+            <div class="auth-footer">  <!-- <div class="auth-footer"> -->
+                <p>Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>  <!-- <p>Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p> -->
+            </div>  <!-- </div> -->
+        </div>  <!-- </div> -->
+    </div>  <!-- </div> -->
+  <!-- blank line -->
+    <script>  <!-- <script> -->
+        // Client-side password validation  <!-- // Client-side password validation -->
+        const password = document.getElementById('password');  <!-- const password = document.getElementById('password'); -->
+        const confirmPassword = document.getElementById('confirm_password');  <!-- const confirmPassword = document.getElementById('confirm_password'); -->
+        const passwordHint = document.getElementById('passwordHint');  <!-- const passwordHint = document.getElementById('passwordHint'); -->
+  <!-- blank line -->
+        confirmPassword.addEventListener('input', () => {  <!-- confirmPassword.addEventListener('input', () => { -->
+            if (confirmPassword.value !== password.value) {  <!-- if (confirmPassword.value !== password.value) { -->
+                passwordHint.textContent = 'Passwords do not match';  <!-- passwordHint.textContent = 'Passwords do not match'; -->
+                passwordHint.style.color = '#ef4444';  <!-- passwordHint.style.color = '#ef4444'; -->
+            } else {  <!-- } else { -->
+                passwordHint.textContent = 'Passwords match';  <!-- passwordHint.textContent = 'Passwords match'; -->
+                passwordHint.style.color = '#10b981';  <!-- passwordHint.style.color = '#10b981'; -->
+            }  <!-- } -->
+        });  <!-- }); -->
+    </script>  <!-- </script> -->
+</body>  <!-- </body> -->
+  <!-- blank line -->
+</html>  <!-- </html> -->

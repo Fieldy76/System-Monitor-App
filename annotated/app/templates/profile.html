@@ -1,0 +1,66 @@
+{% extends "base.html" %}  <!-- {% extends "base.html" %} -->
+  <!-- blank line -->
+{% block title %}Profile - System Monitor{% endblock %}  <!-- {% block title %}Profile - System Monitor{% endblock %} -->
+  <!-- blank line -->
+{% block content %}  <!-- {% block content %} -->
+<div class="container">  <!-- <div class="container"> -->
+    <header>  <!-- <header> -->
+        <h1>User Profile</h1>  <!-- <h1>User Profile</h1> -->
+    </header>  <!-- </header> -->
+  <!-- blank line -->
+    <div class="profile-container">  <!-- <div class="profile-container"> -->
+        <div class="card">  <!-- <div class="card"> -->
+            <h2>Account Information</h2>  <!-- <h2>Account Information</h2> -->
+            <form method="POST" action="{{ url_for('auth.profile') }}">  <!-- <form method="POST" action="{{ url_for('auth.profile') }}"> -->
+                <div class="form-group">  <!-- <div class="form-group"> -->
+                    <label for="username">Username</label>  <!-- <label for="username">Username</label> -->
+                    <input type="text" id="username" value="{{ current_user.username }}" disabled>  <!-- <input type="text" id="username" value="{{ current_user.username }}" disabled> -->
+                    <span class="form-hint">Username cannot be changed</span>  <!-- <span class="form-hint">Username cannot be changed</span> -->
+                </div>  <!-- </div> -->
+  <!-- blank line -->
+                <div class="form-group">  <!-- <div class="form-group"> -->
+                    <label for="email">Email</label>  <!-- <label for="email">Email</label> -->
+                    <input type="email" id="email" name="email" value="{{ current_user.email }}" required>  <!-- <input type="email" id="email" name="email" value="{{ current_user.email }}" required> -->
+                </div>  <!-- </div> -->
+  <!-- blank line -->
+                <h3>Change Password</h3>  <!-- <h3>Change Password</h3> -->
+                <div class="form-group">  <!-- <div class="form-group"> -->
+                    <label for="current_password">Current Password</label>  <!-- <label for="current_password">Current Password</label> -->
+                    <input type="password" id="current_password" name="current_password">  <!-- <input type="password" id="current_password" name="current_password"> -->
+                </div>  <!-- </div> -->
+  <!-- blank line -->
+                <div class="form-group">  <!-- <div class="form-group"> -->
+                    <label for="new_password">New Password</label>  <!-- <label for="new_password">New Password</label> -->
+                    <input type="password" id="new_password" name="new_password" minlength="8">  <!-- <input type="password" id="new_password" name="new_password" minlength="8"> -->
+                </div>  <!-- </div> -->
+  <!-- blank line -->
+                <div class="form-group">  <!-- <div class="form-group"> -->
+                    <label for="confirm_password">Confirm New Password</label>  <!-- <label for="confirm_password">Confirm New Password</label> -->
+                    <input type="password" id="confirm_password" name="confirm_password">  <!-- <input type="password" id="confirm_password" name="confirm_password"> -->
+                </div>  <!-- </div> -->
+  <!-- blank line -->
+                <button type="submit" class="btn-primary">Update Profile</button>  <!-- <button type="submit" class="btn-primary">Update Profile</button> -->
+            </form>  <!-- </form> -->
+        </div>  <!-- </div> -->
+  <!-- blank line -->
+        <div class="card">  <!-- <div class="card"> -->
+            <h2>Account Details</h2>  <!-- <h2>Account Details</h2> -->
+            <div class="info-grid">  <!-- <div class="info-grid"> -->
+                <div class="info-item">  <!-- <div class="info-item"> -->
+                    <span class="label">Account Type:</span>  <!-- <span class="label">Account Type:</span> -->
+                    <span class="value">{{ 'Administrator' if current_user.is_admin else 'User' }}</span>  <!-- <span class="value">{{ 'Administrator' if current_user.is_admin else 'User' }}</span> -->
+                </div>  <!-- </div> -->
+                <div class="info-item">  <!-- <div class="info-item"> -->
+                    <span class="label">Member Since:</span>  <!-- <span class="label">Member Since:</span> -->
+                    <span class="value">{{ current_user.created_at.strftime('%Y-%m-%d') }}</span>  <!-- <span class="value">{{ current_user.created_at.strftime('%Y-%m-%d') }}</span> -->
+                </div>  <!-- </div> -->
+                <div class="info-item">  <!-- <div class="info-item"> -->
+                    <span class="label">Last Login:</span>  <!-- <span class="label">Last Login:</span> -->
+                    <span class="value">{{ current_user.last_login.strftime('%Y-%m-%d %H:%M') if current_user.last_login  <!-- <span class="value">{{ current_user.last_login.strftime('%Y-%m-%d %H:%M') if current_user.last_login -->
+                        else 'N/A' }}</span>  <!-- else 'N/A' }}</span> -->
+                </div>  <!-- </div> -->
+            </div>  <!-- </div> -->
+        </div>  <!-- </div> -->
+    </div>  <!-- </div> -->
+</div>  <!-- </div> -->
+{% endblock %}  <!-- {% endblock %} -->

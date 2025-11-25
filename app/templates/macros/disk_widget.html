@@ -1,0 +1,8 @@
+{% macro disk_widget(widget_id='disk-widget') %}
+<div class="card disk-card widget" data-widget-id="{{ widget_id }}" data-widget-type="disk">
+    <h2>Disk Usage</h2>
+    <div class="disk-list" id="{{ widget_id }}-list">
+        <p style="text-align: center; color: var(--text-secondary);">Loading...</p>
+    </div>
+</div>
+{% endmacro %}

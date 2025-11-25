@@ -1,0 +1,67 @@
+{% extends "base.html" %}  <!-- {% extends "base.html" %} -->
+  <!-- blank line -->
+{% block title %}Settings - System Monitor{% endblock %}  <!-- {% block title %}Settings - System Monitor{% endblock %} -->
+  <!-- blank line -->
+{% block content %}  <!-- {% block content %} -->
+<div class="container">  <!-- <div class="container"> -->
+    <header>  <!-- <header> -->
+        <h1>Settings</h1>  <!-- <h1>Settings</h1> -->
+    </header>  <!-- </header> -->
+  <!-- blank line -->
+    <div class="card">  <!-- <div class="card"> -->
+        <h2>Dashboard Preferences</h2>  <!-- <h2>Dashboard Preferences</h2> -->
+        <form id="settingsForm">  <!-- <form id="settingsForm"> -->
+            <div class="form-group">  <!-- <div class="form-group"> -->
+                <label for="refresh_interval">Refresh Interval (milliseconds)</label>  <!-- <label for="refresh_interval">Refresh Interval (milliseconds)</label> -->
+                <select id="refresh_interval" name="refresh_interval">  <!-- <select id="refresh_interval" name="refresh_interval"> -->
+                    <option value="1000">1 second</option>  <!-- <option value="1000">1 second</option> -->
+                    <option value="2000">2 seconds</option>  <!-- <option value="2000">2 seconds</option> -->
+                    <option value="5000">5 seconds</option>  <!-- <option value="5000">5 seconds</option> -->
+                    <option value="10000">10 seconds</option>  <!-- <option value="10000">10 seconds</option> -->
+                </select>  <!-- </select> -->
+            </div>  <!-- </div> -->
+  <!-- blank line -->
+            <div class="form-group">  <!-- <div class="form-group"> -->
+                <label for="chart_data_points">Chart Data Points</label>  <!-- <label for="chart_data_points">Chart Data Points</label> -->
+                <select id="chart_data_points" name="chart_data_points">  <!-- <select id="chart_data_points" name="chart_data_points"> -->
+                    <option value="30">30 points</option>  <!-- <option value="30">30 points</option> -->
+                    <option value="60">60 points</option>  <!-- <option value="60">60 points</option> -->
+                    <option value="120">120 points</option>  <!-- <option value="120">120 points</option> -->
+                    <option value="300">300 points</option>  <!-- <option value="300">300 points</option> -->
+                </select>  <!-- </select> -->
+            </div>  <!-- </div> -->
+  <!-- blank line -->
+            <button type="submit" class="btn-primary">Save Settings</button>  <!-- <button type="submit" class="btn-primary">Save Settings</button> -->
+        </form>  <!-- </form> -->
+    </div>  <!-- </div> -->
+</div>  <!-- </div> -->
+  <!-- blank line -->
+<script>  <!-- <script> -->
+    async function loadSettings() {  <!-- async function loadSettings() { -->
+        const response = await fetch('/api/settings');  <!-- const response = await fetch('/api/settings'); -->
+        const data = await response.json();  <!-- const data = await response.json(); -->
+  <!-- blank line -->
+        document.getElementById('refresh_interval').value = data.refresh_interval;  <!-- document.getElementById('refresh_interval').value = data.refresh_interval; -->
+        document.getElementById('chart_data_points').value = data.chart_data_points;  <!-- document.getElementById('chart_data_points').value = data.chart_data_points; -->
+    }  <!-- } -->
+  <!-- blank line -->
+    document.getElementById('settingsForm').addEventListener('submit', async (e) => {  <!-- document.getElementById('settingsForm').addEventListener('submit', async (e) => { -->
+        e.preventDefault();  <!-- e.preventDefault(); -->
+  <!-- blank line -->
+        const formData = {  <!-- const formData = { -->
+            refresh_interval: parseInt(document.getElementById('refresh_interval').value),  <!-- refresh_interval: parseInt(document.getElementById('refresh_interval').value), -->
+            chart_data_points: parseInt(document.getElementById('chart_data_points').value)  <!-- chart_data_points: parseInt(document.getElementById('chart_data_points').value) -->
+        };  <!-- }; -->
+  <!-- blank line -->
+        await fetch('/api/settings', {  <!-- await fetch('/api/settings', { -->
+            method: 'PUT',  <!-- method: 'PUT', -->
+            headers: { 'Content-Type': 'application/json' },  <!-- headers: { 'Content-Type': 'application/json' }, -->
+            body: JSON.stringify(formData)  <!-- body: JSON.stringify(formData) -->
+        });  <!-- }); -->
+  <!-- blank line -->
+        alert('Settings saved! Please refresh the dashboard to apply changes.');  <!-- alert('Settings saved! Please refresh the dashboard to apply changes.'); -->
+    });  <!-- }); -->
+  <!-- blank line -->
+    loadSettings();  <!-- loadSettings(); -->
+</script>  <!-- </script> -->
+{% endblock %}  <!-- {% endblock %} -->

@@ -1,0 +1,48 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches
+.pytest_cache/
+.cache/
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+
+# Environment Variables (CRITICAL SECURITY)
+.env
+.env.local
+
+# Database
+*.sqlite3
+*.db
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Python
+*.so
+.Python
+
+# Flask
+instance/
+.webassets-cache
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.coverage
+htmlcov/
+
+# Flask-Migrate
+migrations/versions/*.pyc

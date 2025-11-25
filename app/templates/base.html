@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}System Monitor{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    {% if current_user.is_authenticated %}
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2>System Monitor</h2>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="{{ url_for('main.index') }}"
+                    class="{% if request.endpoint == 'main.index' %}active{% endif %}">
+                    <span class="icon">📊</span> Dashboard
+                </a></li>
+            <li><a href="{{ url_for('main.processes') }}"
+                    class="{% if request.endpoint == 'main.processes' %}active{% endif %}">
+                    <span class="icon">⚙️</span> Processes
+                </a></li>
+            <li><a href="{{ url_for('main.alerts_page') }}"
+                    class="{% if request.endpoint == 'main.alerts_page' %}active{% endif %}">
+                    <span class="icon">🔔</span> Alerts
+                </a></li>
+            <li><a href="{{ url_for('main.servers_page') }}"
+                    class="{% if request.endpoint == 'main.servers_page' %}active{% endif %}">
+                    <span class="icon">🖥️</span> Servers
+                </a></li>
+            <li><a href="{{ url_for('main.health_dashboard') }}"
+                    class="{% if request.endpoint == 'main.health_dashboard' %}active{% endif %}">
+                    <span class="icon">❤️</span> Health
+                </a></li>
+            <li><a href="{{ url_for('main.settings') }}"
+                    class="{% if request.endpoint == 'main.settings' %}active{% endif %}">
+                    <span class="icon">⚙️</span> Settings
+                </a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <span class="user-name">{{ current_user.username }}</span>
+                {% if current_user.is_admin %}<span class="admin-badge">Admin</span>{% endif %}
+            </div>
+            <a href="{{ url_for('auth.profile') }}" class="profile-link">Profile</a>
+            <a href="{{ url_for('auth.logout') }}" class="logout-link">Logout</a>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Main Content -->
+    <div class="main-content {% if not current_user.is_authenticated %}no-sidebar{% endif %}">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">
+                {{ message }}
+                <button class="close-flash" onclick="this.parentElement.remove()">×</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

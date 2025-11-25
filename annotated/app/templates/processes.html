@@ -1,0 +1,102 @@
+{% extends "base.html" %}  <!-- {% extends "base.html" %} -->
+  <!-- blank line -->
+{% block title %}Processes - System Monitor{% endblock %}  <!-- {% block title %}Processes - System Monitor{% endblock %} -->
+  <!-- blank line -->
+{% block content %}  <!-- {% block content %} -->
+<div class="container">  <!-- <div class="container"> -->
+    <header>  <!-- <header> -->
+        <h1>Process Monitor</h1>  <!-- <h1>Process Monitor</h1> -->
+        <div>  <!-- <div> -->
+            <input type="text" id="searchProcess" placeholder="Search processes..."  <!-- <input type="text" id="searchProcess" placeholder="Search processes..." -->
+                style="padding: 0.5rem 1rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);">  <!-- style="padding: 0.5rem 1rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);"> -->
+        </div>  <!-- </div> -->
+    </header>  <!-- </header> -->
+  <!-- blank line -->
+    <div class="card">  <!-- <div class="card"> -->
+        <table id="processTable">  <!-- <table id="processTable"> -->
+            <thead>  <!-- <thead> -->
+                <tr>  <!-- <tr> -->
+                    <th>PID</th>  <!-- <th>PID</th> -->
+                    <th>Name</th>  <!-- <th>Name</th> -->
+                    <th>User</th>  <!-- <th>User</th> -->
+                    <th>CPU %</th>  <!-- <th>CPU %</th> -->
+                    <th>Memory %</th>  <!-- <th>Memory %</th> -->
+                    <th>Status</th>  <!-- <th>Status</th> -->
+                    {% if current_user.is_admin %}<th>Actions</th>{% endif %}  <!-- {% if current_user.is_admin %}<th>Actions</th>{% endif %} -->
+                </tr>  <!-- </tr> -->
+            </thead>  <!-- </thead> -->
+            <tbody id="processTableBody">  <!-- <tbody id="processTableBody"> -->
+                <tr>  <!-- <tr> -->
+                    <td colspan="{% if current_user.is_admin %}7{% else %}6{% endif %}" style="text-align: center;">  <!-- <td colspan="{% if current_user.is_admin %}7{% else %}6{% endif %}" style="text-align: center;"> -->
+                        Loading...</td>  <!-- Loading...</td> -->
+                </tr>  <!-- </tr> -->
+            </tbody>  <!-- </tbody> -->
+        </table>  <!-- </table> -->
+    </div>  <!-- </div> -->
+</div>  <!-- </div> -->
+  <!-- blank line -->
+<div id="app-data" data-is-admin="{{ current_user.is_admin|lower }}"></div>  <!-- <div id="app-data" data-is-admin="{{ current_user.is_admin|lower }}"></div> -->
+  <!-- blank line -->
+<script>  <!-- <script> -->
+    const isAdmin = document.getElementById('app-data').dataset.isAdmin === 'true';  <!-- const isAdmin = document.getElementById('app-data').dataset.isAdmin === 'true'; -->
+  <!-- blank line -->
+    async function loadProcesses() {  <!-- async function loadProcesses() { -->
+        try {  <!-- try { -->
+            const response = await fetch('/api/processes');  <!-- const response = await fetch('/api/processes'); -->
+            const data = await response.json();  <!-- const data = await response.json(); -->
+            const tbody = document.getElementById('processTableBody');  <!-- const tbody = document.getElementById('processTableBody'); -->
+            tbody.innerHTML = '';  <!-- tbody.innerHTML = ''; -->
+  <!-- blank line -->
+            data.processes.forEach(proc => {  <!-- data.processes.forEach(proc => { -->
+                const row = document.createElement('tr');  <!-- const row = document.createElement('tr'); -->
+                let rowHTML = `  <!-- let rowHTML = ` -->
+                <td>${proc.pid}</td>  <!-- <td>${proc.pid}</td> -->
+                <td>${proc.name}</td>  <!-- <td>${proc.name}</td> -->
+                <td>${proc.username || 'N/A'}</td>  <!-- <td>${proc.username || 'N/A'}</td> -->
+                <td>${proc.cpu_percent.toFixed(1)}%</td>  <!-- <td>${proc.cpu_percent.toFixed(1)}%</td> -->
+                <td>${proc.memory_percent.toFixed(1)}%</td>  <!-- <td>${proc.memory_percent.toFixed(1)}%</td> -->
+                <td>${proc.status}</td>  <!-- <td>${proc.status}</td> -->
+            `;  <!-- `; -->
+  <!-- blank line -->
+                if (isAdmin) {  <!-- if (isAdmin) { -->
+                    rowHTML += `<td><button class="btn btn-danger" onclick="killProcess(${proc.pid})">Kill</button></td>`;  <!-- rowHTML += `<td><button class="btn btn-danger" onclick="killProcess(${proc.pid})">Kill</button></td>`; -->
+                }  <!-- } -->
+  <!-- blank line -->
+                row.innerHTML = rowHTML;  <!-- row.innerHTML = rowHTML; -->
+                tbody.appendChild(row);  <!-- tbody.appendChild(row); -->
+            });  <!-- }); -->
+        } catch (error) {  <!-- } catch (error) { -->
+            console.error('Error loading processes:', error);  <!-- console.error('Error loading processes:', error); -->
+        }  <!-- } -->
+    }  <!-- } -->
+  <!-- blank line -->
+    async function killProcess(pid) {  <!-- async function killProcess(pid) { -->
+        if (!isAdmin) {  <!-- if (!isAdmin) { -->
+            alert('Admin privileges required');  <!-- alert('Admin privileges required'); -->
+            return;  <!-- return; -->
+        }  <!-- } -->
+  <!-- blank line -->
+        if (!confirm(`Are you sure you want to kill process ${pid}?`)) return;  <!-- if (!confirm(`Are you sure you want to kill process ${pid}?`)) return; -->
+  <!-- blank line -->
+        try {  <!-- try { -->
+            const response = await fetch(`/api/processes/${pid}/kill`, { method: 'POST' });  <!-- const response = await fetch(`/api/processes/${pid}/kill`, { method: 'POST' }); -->
+            const data = await response.json();  <!-- const data = await response.json(); -->
+            alert(data.message || data.error);  <!-- alert(data.message || data.error); -->
+            loadProcesses();  <!-- loadProcesses(); -->
+        } catch (error) {  <!-- } catch (error) { -->
+            alert('Error killing process');  <!-- alert('Error killing process'); -->
+        }  <!-- } -->
+    }  <!-- } -->
+  <!-- blank line -->
+    setInterval(loadProcesses, 3000);  <!-- setInterval(loadProcesses, 3000); -->
+    loadProcesses();  <!-- loadProcesses(); -->
+  <!-- blank line -->
+    document.getElementById('searchProcess').addEventListener('input', (e) => {  <!-- document.getElementById('searchProcess').addEventListener('input', (e) => { -->
+        const search = e.target.value.toLowerCase();  <!-- const search = e.target.value.toLowerCase(); -->
+        document.querySelectorAll('#processTableBody tr').forEach(row => {  <!-- document.querySelectorAll('#processTableBody tr').forEach(row => { -->
+            const text = row.textContent.toLowerCase();  <!-- const text = row.textContent.toLowerCase(); -->
+            row.style.display = text.includes(search) ? '' : 'none';  <!-- row.style.display = text.includes(search) ? '' : 'none'; -->
+        });  <!-- }); -->
+    });  <!-- }); -->
+</script>  <!-- </script> -->
+{% endblock %}  <!-- {% endblock %} -->

@@ -1,0 +1,19 @@
+{% macro io_widget(widget_id='io-widget') %}
+<div class="card io-card widget" data-widget-id="{{ widget_id }}" data-widget-type="io">
+    <h2>Disk I/O</h2>
+    <div class="io-grid">
+        <div class="io-item">
+            <span class="label">Read</span>
+            <span class="value" id="{{ widget_id }}-read">0 GB</span>
+            <small id="{{ widget_id }}-read-count" style="color: var(--text-secondary); font-size: 0.75rem;">0
+                ops</small>
+        </div>
+        <div class="io-item">
+            <span class="label">Write</span>
+            <span class="value" id="{{ widget_id }}-write">0 GB</span>
+            <small id="{{ widget_id }}-write-count" style="color: var(--text-secondary); font-size: 0.75rem;">0
+                ops</small>
+        </div>
+    </div>
+</div>
+{% endmacro %}

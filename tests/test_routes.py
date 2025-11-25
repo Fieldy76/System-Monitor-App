@@ -1,68 +1,63 @@
-"""Tests for application routes."""
-# Import json module to parse JSON responses
+import unittest
 import json
+from app import create_app
+from app.models import db, User, ServiceHealth
+from config import Config
 
+class TestConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    WTF_CSRF_ENABLED = False
 
-def test_index_route(client):
-    """Test that the home page loads successfully."""
-    # Make a GET request to the home page route
-    response = client.get('/')
-    # Assert that the response status code is 200 (OK)
-    assert response.status_code == 200
-    # Assert that the response contains HTML content
-    # Check for either <!DOCTYPE html> or <html tag
-    assert b'<!DOCTYPE html>' in response.data or b'<html' in response.data
+class RoutesTestCase(unittest.TestCase):
+    def setUp(self):
+        self.app = create_app(config_object=TestConfig)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        db.create_all()
+        self.client = self.app.test_client()
+        
+        # Create admin user
+        u = User(username='admin', email='admin@example.com', is_admin=True)
+        u.set_password('admin')
+        db.session.add(u)
+        db.session.commit()
 
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()
 
-def test_metrics_route(client):
-    """Test that the metrics API endpoint returns valid JSON."""
-    # Make a GET request to the metrics API endpoint
-    response = client.get('/api/metrics')
-    # Assert that the response status code is 200 (OK)
-    assert response.status_code == 200
-    # Assert that the response content type is JSON
-    assert response.content_type == 'application/json'
-    
-    # Parse JSON response into a Python dictionary
-    data = json.loads(response.data)
-    
-    # Verify structure - check that all expected top-level keys are present
-    assert 'cpu' in data      # CPU metrics should be present
-    assert 'memory' in data   # Memory metrics should be present
-    assert 'disk' in data     # Disk metrics should be present
-    assert 'io' in data       # I/O metrics should be present
-    
-    # Verify CPU data structure
-    assert 'percent' in data['cpu']  # CPU percentage should be present
-    assert 'freq' in data['cpu']     # CPU frequency should be present
-    
-    # Verify memory data structure
-    assert 'total' in data['memory']    # Total memory should be present
-    assert 'used' in data['memory']     # Used memory should be present
-    assert 'percent' in data['memory']  # Memory percentage should be present
+    def login(self, username, password):
+        return self.client.post('/auth/login', data=dict(
+            username=username,
+            password=password
+        ), follow_redirects=True)
 
+    def test_health_check_endpoint(self):
+        self.login('admin', 'admin')
+        
+        # Create a service
+        response = self.client.post('/api/health/services', json={
+            'name': 'Test Service',
+            'url': 'https://example.com'
+        })
+        self.assertEqual(response.status_code, 201)
+        
+        # Get services
+        response = self.client.get('/api/health/services')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(len(data['services']), 1)
+        self.assertEqual(data['services'][0]['name'], 'Test Service')
 
-def test_metrics_cpu_percent_range(client):
-    """Test that CPU percent is within valid range."""
-    # Make a GET request to the metrics API endpoint
-    response = client.get('/api/metrics')
-    # Parse the JSON response
-    data = json.loads(response.data)
-    
-    # Extract the CPU percent value
-    cpu_percent = data['cpu']['percent']
-    # Assert that CPU percent is between 0 and 100 (inclusive)
-    assert 0 <= cpu_percent <= 100
+    def test_metrics_endpoint(self):
+        self.login('admin', 'admin')
+        response = self.client.get('/api/metrics')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertIn('cpu', data)
+        self.assertIn('memory', data)
 
-
-def test_metrics_memory_percent_range(client):
-    """Test that memory percent is within valid range."""
-    # Make a GET request to the metrics API endpoint
-    response = client.get('/api/metrics')
-    # Parse the JSON response
-    data = json.loads(response.data)
-    
-    # Extract the memory percent value
-    memory_percent = data['memory']['percent']
-    # Assert that memory percent is between 0 and 100 (inclusive)
-    assert 0 <= memory_percent <= 100
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

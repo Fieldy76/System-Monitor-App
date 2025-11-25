@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Servers - System Monitor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>Server Management</h1>
+        {% if current_user.is_admin %}
+        <button class="btn-primary" onclick="showAddServer()">+ Add Server</button>
+        {% endif %}
+    </header>
+
+    <div class="card">
+        <h2>Registered Servers</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Hostname</th>
+                    <th>Status</th>
+                    <th>Last Seen</th>
+                    {% if current_user.is_admin %}<th>Actions</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody id="serversBody">
+                <tr>
+                    <td colspan="{% if current_user.is_admin %}5{% else %}4{% endif %}" style="text-align: center;">
+                        Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    async function loadServers() {
+        const response = await fetch('/api/servers');
+        const data = await response.json();
+        const tbody = document.getElementById('serversBody');
+        tbody.innerHTML = '';
+
+        data.servers.forEach(server => {
+            const row = document.createElement('tr');
+            const lastSeen = server.last_seen ? new Date(server.last_seen).toLocaleString() : 'Never';
+            const status = server.is_active ? '<span style="color: var(--success-color)">●</span> Active' : '<span style="color: var(--text-secondary)">●</span> Inactive';
+
+            row.innerHTML = `
+            <td>${server.name} ${server.is_local ? '<span style="color: var(--accent-color); font-size: 0.75rem;">(Local)</span>' : ''}</td>
+            <td>${server.hostname}</td>
+            <td>${status}</td>
+            <td>${lastSeen}</td>
+            {% if current_user.is_admin %}
+            <td>
+                ${!server.is_local ? `<button class="btn btn-danger" onclick="deleteServer(${server.id})">Delete</button>` : ''}
+            </td>
+            {% endif %}
+        `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function showAddServer() {
+        alert('Server addition form would appear here. Full implementation available in complete version.');
+    }
+
+    {% if current_user.is_admin %}
+    async function deleteServer(id) {
+        if (!confirm('Delete this server?')) return;
+        await fetch(`/api/servers/${id}`, { method: 'DELETE' });
+        loadServers();
+    }
+    {% endif %}
+
+    loadServers();
+    setInterval(loadServers, 10000);
+</script>
+{% endblock %}

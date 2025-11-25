@@ -1,0 +1,21 @@
+{% macro memory_widget(widget_id='memory-widget') %}
+<div class="card memory-card widget" data-widget-id="{{ widget_id }}" data-widget-type="memory">
+    <h2>Memory</h2>
+    <div class="metric-large">
+        <span id="{{ widget_id }}-percent">0</span><span class="unit">%</span>
+    </div>
+    <div class="sub-metrics">
+        <div class="sub-metric">
+            <span class="label">Used</span>
+            <span class="value" id="{{ widget_id }}-used">0 GB</span>
+        </div>
+        <div class="sub-metric">
+            <span class="label">Total</span>
+            <span class="value" id="{{ widget_id }}-total">0 GB</span>
+        </div>
+    </div>
+    <div class="chart-container">
+        <canvas id="{{ widget_id }}-chart"></canvas>
+    </div>
+</div>
+{% endmacro %}

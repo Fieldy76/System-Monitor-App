@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Processes - System Monitor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>Process Monitor</h1>
+        <div>
+            <input type="text" id="searchProcess" placeholder="Search processes..."
+                style="padding: 0.5rem 1rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);">
+        </div>
+    </header>
+
+    <div class="card">
+        <table id="processTable">
+            <thead>
+                <tr>
+                    <th>PID</th>
+                    <th>Name</th>
+                    <th>User</th>
+                    <th>CPU %</th>
+                    <th>Memory %</th>
+                    <th>Status</th>
+                    {% if current_user.is_admin %}<th>Actions</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody id="processTableBody">
+                <tr>
+                    <td colspan="{% if current_user.is_admin %}7{% else %}6{% endif %}" style="text-align: center;">
+                        Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="app-data" data-is-admin="{{ current_user.is_admin|lower }}"></div>
+
+<script>
+    const isAdmin = document.getElementById('app-data').dataset.isAdmin === 'true';
+
+    async function loadProcesses() {
+        try {
+            const response = await fetch('/api/processes');
+            const data = await response.json();
+            const tbody = document.getElementById('processTableBody');
+            tbody.innerHTML = '';
+
+            data.processes.forEach(proc => {
+                const row = document.createElement('tr');
+                let rowHTML = `
+                <td>${proc.pid}</td>
+                <td>${proc.name}</td>
+                <td>${proc.username || 'N/A'}</td>
+                <td>${proc.cpu_percent.toFixed(1)}%</td>
+                <td>${proc.memory_percent.toFixed(1)}%</td>
+                <td>${proc.status}</td>
+            `;
+
+                if (isAdmin) {
+                    rowHTML += `<td><button class="btn btn-danger" onclick="killProcess(${proc.pid})">Kill</button></td>`;
+                }
+
+                row.innerHTML = rowHTML;
+                tbody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Error loading processes:', error);
+        }
+    }
+
+    async function killProcess(pid) {
+        if (!isAdmin) {
+            alert('Admin privileges required');
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to kill process ${pid}?`)) return;
+
+        try {
+            const response = await fetch(`/api/processes/${pid}/kill`, { method: 'POST' });
+            const data = await response.json();
+            alert(data.message || data.error);
+            loadProcesses();
+        } catch (error) {
+            alert('Error killing process');
+        }
+    }
+
+    setInterval(loadProcesses, 3000);
+    loadProcesses();
+
+    document.getElementById('searchProcess').addEventListener('input', (e) => {
+        const search = e.target.value.toLowerCase();
+        document.querySelectorAll('#processTableBody tr').forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(search) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

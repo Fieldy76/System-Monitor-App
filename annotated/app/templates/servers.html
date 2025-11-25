@@ -1,0 +1,78 @@
+{% extends "base.html" %}  <!-- {% extends "base.html" %} -->
+  <!-- blank line -->
+{% block title %}Servers - System Monitor{% endblock %}  <!-- {% block title %}Servers - System Monitor{% endblock %} -->
+  <!-- blank line -->
+{% block content %}  <!-- {% block content %} -->
+<div class="container">  <!-- <div class="container"> -->
+    <header>  <!-- <header> -->
+        <h1>Server Management</h1>  <!-- <h1>Server Management</h1> -->
+        {% if current_user.is_admin %}  <!-- {% if current_user.is_admin %} -->
+        <button class="btn-primary" onclick="showAddServer()">+ Add Server</button>  <!-- <button class="btn-primary" onclick="showAddServer()">+ Add Server</button> -->
+        {% endif %}  <!-- {% endif %} -->
+    </header>  <!-- </header> -->
+  <!-- blank line -->
+    <div class="card">  <!-- <div class="card"> -->
+        <h2>Registered Servers</h2>  <!-- <h2>Registered Servers</h2> -->
+        <table>  <!-- <table> -->
+            <thead>  <!-- <thead> -->
+                <tr>  <!-- <tr> -->
+                    <th>Name</th>  <!-- <th>Name</th> -->
+                    <th>Hostname</th>  <!-- <th>Hostname</th> -->
+                    <th>Status</th>  <!-- <th>Status</th> -->
+                    <th>Last Seen</th>  <!-- <th>Last Seen</th> -->
+                    {% if current_user.is_admin %}<th>Actions</th>{% endif %}  <!-- {% if current_user.is_admin %}<th>Actions</th>{% endif %} -->
+                </tr>  <!-- </tr> -->
+            </thead>  <!-- </thead> -->
+            <tbody id="serversBody">  <!-- <tbody id="serversBody"> -->
+                <tr>  <!-- <tr> -->
+                    <td colspan="{% if current_user.is_admin %}5{% else %}4{% endif %}" style="text-align: center;">  <!-- <td colspan="{% if current_user.is_admin %}5{% else %}4{% endif %}" style="text-align: center;"> -->
+                        Loading...</td>  <!-- Loading...</td> -->
+                </tr>  <!-- </tr> -->
+            </tbody>  <!-- </tbody> -->
+        </table>  <!-- </table> -->
+    </div>  <!-- </div> -->
+</div>  <!-- </div> -->
+  <!-- blank line -->
+<script>  <!-- <script> -->
+    async function loadServers() {  <!-- async function loadServers() { -->
+        const response = await fetch('/api/servers');  <!-- const response = await fetch('/api/servers'); -->
+        const data = await response.json();  <!-- const data = await response.json(); -->
+        const tbody = document.getElementById('serversBody');  <!-- const tbody = document.getElementById('serversBody'); -->
+        tbody.innerHTML = '';  <!-- tbody.innerHTML = ''; -->
+  <!-- blank line -->
+        data.servers.forEach(server => {  <!-- data.servers.forEach(server => { -->
+            const row = document.createElement('tr');  <!-- const row = document.createElement('tr'); -->
+            const lastSeen = server.last_seen ? new Date(server.last_seen).toLocaleString() : 'Never';  <!-- const lastSeen = server.last_seen ? new Date(server.last_seen).toLocaleString() : 'Never'; -->
+            const status = server.is_active ? '<span style="color: var(--success-color)">●</span> Active' : '<span style="color: var(--text-secondary)">●</span> Inactive';  <!-- const status = server.is_active ? '<span style="color: var(--success-color)">●</span> Active' : '<span style="color: var(--text-secondary)">●</span> Inactive'; -->
+  <!-- blank line -->
+            row.innerHTML = `  <!-- row.innerHTML = ` -->
+            <td>${server.name} ${server.is_local ? '<span style="color: var(--accent-color); font-size: 0.75rem;">(Local)</span>' : ''}</td>  <!-- <td>${server.name} ${server.is_local ? '<span style="color: var(--accent-color); font-size: 0.75rem;">(Local)</span>' : ''}</td> -->
+            <td>${server.hostname}</td>  <!-- <td>${server.hostname}</td> -->
+            <td>${status}</td>  <!-- <td>${status}</td> -->
+            <td>${lastSeen}</td>  <!-- <td>${lastSeen}</td> -->
+            {% if current_user.is_admin %}  <!-- {% if current_user.is_admin %} -->
+            <td>  <!-- <td> -->
+                ${!server.is_local ? `<button class="btn btn-danger" onclick="deleteServer(${server.id})">Delete</button>` : ''}  <!-- ${!server.is_local ? `<button class="btn btn-danger" onclick="deleteServer(${server.id})">Delete</button>` : ''} -->
+            </td>  <!-- </td> -->
+            {% endif %}  <!-- {% endif %} -->
+        `;  <!-- `; -->
+            tbody.appendChild(row);  <!-- tbody.appendChild(row); -->
+        });  <!-- }); -->
+    }  <!-- } -->
+  <!-- blank line -->
+    function showAddServer() {  <!-- function showAddServer() { -->
+        alert('Server addition form would appear here. Full implementation available in complete version.');  <!-- alert('Server addition form would appear here. Full implementation available in complete version.'); -->
+    }  <!-- } -->
+  <!-- blank line -->
+    {% if current_user.is_admin %}  <!-- {% if current_user.is_admin %} -->
+    async function deleteServer(id) {  <!-- async function deleteServer(id) { -->
+        if (!confirm('Delete this server?')) return;  <!-- if (!confirm('Delete this server?')) return; -->
+        await fetch(`/api/servers/${id}`, { method: 'DELETE' });  <!-- await fetch(`/api/servers/${id}`, { method: 'DELETE' }); -->
+        loadServers();  <!-- loadServers(); -->
+    }  <!-- } -->
+    {% endif %}  <!-- {% endif %} -->
+  <!-- blank line -->
+    loadServers();  <!-- loadServers(); -->
+    setInterval(loadServers, 10000);  <!-- setInterval(loadServers, 10000); -->
+</script>  <!-- </script> -->
+{% endblock %}  <!-- {% endblock %} -->

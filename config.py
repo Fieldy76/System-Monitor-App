@@ -19,7 +19,40 @@ class Config:
     # JSON_SORT_KEYS=False preserves the order of keys in JSON responses
     JSON_SORT_KEYS = False
     
-    # Add any common configuration here that applies to all environments
+    # Database configuration
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///system_monitor.db'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Redis configuration for Celery
+    REDIS_URL = os.environ.get('REDIS_URL') or 'redis://localhost:6379/0'
+    CELERY_BROKER_URL = REDIS_URL
+    CELERY_RESULT_BACKEND = REDIS_URL
+    
+    # Email configuration
+    MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'smtp.gmail.com'
+    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or 'noreply@systemmonitor.com'
+    
+    # Twilio configuration for SMS alerts
+    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
+    TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER')
+    
+    # Slack webhook configuration
+    SLACK_WEBHOOK_URL = os.environ.get('SLACK_WEBHOOK_URL')
+    SLACK_CHANNEL = os.environ.get('SLACK_CHANNEL', '#monitoring')
+    SLACK_USERNAME = os.environ.get('SLACK_USERNAME', 'System Monitor Bot')
+    
+    # Monitoring settings
+    METRIC_COLLECTION_INTERVAL = int(os.environ.get('METRIC_COLLECTION_INTERVAL', 60))  # seconds
+    DATA_RETENTION_DAYS = int(os.environ.get('DATA_RETENTION_DAYS', 30))  # days
+    ALERT_CHECK_INTERVAL = int(os.environ.get('ALERT_CHECK_INTERVAL', 60))  # seconds
+    
+    # Pagination
+    ITEMS_PER_PAGE = 50
     
 
 class DevelopmentConfig(Config):

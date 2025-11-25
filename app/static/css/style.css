@@ -1,371 +1,624 @@
-/* Define CSS variables for the color scheme and fonts */
+/* Enhanced System Monitor Styles with Authentication, Navigation, and New Features */
+
+/* ============================================================================
+   CSS VARIABLES
+   ============================================================================ */
 :root {
-    /* Background color for the body */
     --bg-color: #0f172a;
-    /* Background color for cards with transparency */
     --card-bg: rgba(30, 41, 59, 0.7);
-    /* Primary text color */
     --text-primary: #f8fafc;
-    /* Secondary text color */
     --text-secondary: #94a3b8;
-    /* Accent color for highlights */
     --accent-color: #38bdf8;
-    /* Glow effect color for accents */
     --accent-glow: rgba(56, 189, 248, 0.3);
-    /* Color for success indicators */
     --success-color: #4ade80;
-    /* Color for warning indicators */
     --warning-color: #facc15;
-    /* Color for danger indicators */
     --danger-color: #f87171;
-    /* Font family for the application */
     --font-family: 'Outfit', sans-serif;
+    --sidebar-width: 250px;
 }
 
-/* Reset default browser styles */
+/* ============================================================================
+   BASE STYLES
+   ============================================================================ */
 * {
-    /* Include padding and border in the element's total width and height */
-    box-sizing: border_box;
-    /* Remove default margin */
+    box-sizing: border-box;
     margin: 0;
-    /* Remove default padding */
     padding: 0;
 }
 
-/* Body styles */
 body {
-    /* Set background color */
     background-color: var(--bg-color);
-    /* Set text color */
     color: var(--text-primary);
-    /* Set font family */
     font-family: var(--font-family);
-    /* Ensure body takes at least the full viewport height */
     min-height: 100vh;
-    /* Add radial gradients for a modern background effect */
     background-image:
         radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.15) 0px, transparent 50%),
         radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
-    /* Prevent horizontal scrolling */
     overflow-x: hidden;
 }
 
-/* Container for main content */
-.container {
-    /* Limit maximum width */
-    max-width: 1200px;
-    /* Center the container horizontally */
-    margin: 0 auto;
-    /* Add padding around the content */
+/* ============================================================================
+   SIDEBAR NAVIGATION
+   ============================================================================ */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2rem 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+}
+
+.sidebar-header {
+    padding: 0 1.5rem 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-header h2 {
+    background: linear-gradient(to right, #38bdf8, #818cf8);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.nav-menu {
+    flex: 1;
+    list-style: none;
+    padding: 1rem 0;
+}
+
+.nav-menu li {
+    margin: 0.25rem 0;
+}
+
+.nav-menu a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.nav-menu a:hover {
+    background: rgba(56, 189, 248, 0.1);
+    color: var(--accent-color);
+}
+
+.nav-menu a.active {
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--accent-color);
+    border-right: 3px solid var(--accent-color);
+}
+
+.nav-menu .icon {
+    font-size: 1.25rem;
+}
+
+.sidebar-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.user-name {
+    font-weight: 500;
+}
+
+.admin-badge {
+    background: rgba(168, 85, 247, 0.2);
+    color: #a855f7;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+}
+
+.profile-link,
+.logout-link {
+    display: block;
+    padding: 0.5rem 0;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.2s ease;
+}
+
+.profile-link:hover,
+.logout-link:hover {
+    color: var(--accent-color);
+}
+
+/* ============================================================================
+   MAIN CONTENT AREA
+   ============================================================================ */
+.main-content {
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
     padding: 2rem;
 }
 
-/* Header styles */
-header {
-    /* Use flexbox for layout */
+.main-content.no-sidebar {
+    margin-left: 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ============================================================================
+   FLASH MESSAGES
+   ============================================================================ */
+.flash-messages {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 2000;
+    max-width: 400px;
+}
+
+.flash-message {
+    padding: 1rem 1.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 0.5rem;
+    backdrop-filter: blur(12px);
+    border: 1px solid;
     display: flex;
-    /* Space items evenly */
     justify-content: space-between;
-    /* Align items vertically */
     align-items: center;
-    /* Add margin at the bottom */
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.flash-success {
+    background: rgba(74, 222, 128, 0.1);
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+.flash-error {
+    background: rgba(248, 113, 113, 0.1);
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+}
+
+.flash-info {
+    background: rgba(56, 189, 248, 0.1);
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
+.close-flash {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 1rem;
+}
+
+/* ============================================================================
+   AUTHENTICATION PAGES
+   ============================================================================ */
+.auth-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 400px;
+}
+
+.auth-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.auth-header {
+    text-align: center;
     margin-bottom: 2rem;
 }
 
-/* Main heading styles */
-h1 {
-    /* Set font weight */
-    font-weight: 600;
-    /* Set font size */
-    font-size: 2rem;
-    /* Adjust letter spacing */
-    letter-spacing: -0.025em;
-    /* Create a gradient text effect */
+.auth-header h1 {
     background: linear-gradient(to right, #38bdf8, #818cf8);
-    /* Clip background to text (standard property) */
     background-clip: text;
-    /* Clip background to text (Webkit prefix) */
     -webkit-background-clip: text;
-    /* Make text transparent to show background */
+    -webkit-text-fill-color: transparent;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.auth-header p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.form-hint {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.checkbox-group label {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent-color), #818cf8);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(56, 189, 248, 0.3);
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.auth-footer p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.auth-footer a {
+    color: var(--accent-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+/* ============================================================================
+   DASHBOARD COMPONENTS
+   ============================================================================ */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+h1 {
+    font-weight: 600;
+    font-size: 2rem;
+    letter-spacing: -0.025em;
+    background: linear-gradient(to right, #38bdf8, #818cf8);
+    background-clip: text;
+    -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
-/* Status indicator styles */
+h2 {
+    font-size: 1.125rem;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
 .status-indicator {
-    /* Use flexbox */
     display: flex;
-    /* Align items vertically */
     align-items: center;
-    /* Add gap between dot and text */
     gap: 0.5rem;
-    /* Set font size */
     font-size: 0.875rem;
-    /* Set text color */
     color: var(--success-color);
-    /* Set background color with transparency */
     background: rgba(74, 222, 128, 0.1);
-    /* Add padding */
     padding: 0.25rem 0.75rem;
-    /* Make it pill-shaped */
     border-radius: 9999px;
 }
 
-/* Status dot styles */
 .dot {
-    /* Set width */
     width: 8px;
-    /* Set height */
     height: 8px;
-    /* Set background color */
     background-color: var(--success-color);
-    /* Make it circular */
     border-radius: 50%;
-    /* Add pulse animation */
     animation: pulse 2s infinite;
 }
 
-/* Pulse animation keyframes */
 @keyframes pulse {
-
-    /* Start with a solid shadow */
     0% {
         box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
     }
-
-    /* Expand shadow and fade out */
     70% {
         box-shadow: 0 0 0 6px rgba(74, 222, 128, 0);
     }
-
-    /* End with no shadow */
     100% {
         box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
     }
 }
 
-/* Dashboard grid layout */
 .dashboard-grid {
-    /* Use grid layout */
     display: grid;
-    /* Create responsive columns */
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    /* Add gap between grid items */
     gap: 1.5rem;
 }
 
-/* Card component styles */
 .card {
-    /* Set background color */
     background: var(--card-bg);
-    /* Add blur effect to background */
     backdrop-filter: blur(12px);
-    /* Webkit prefix for backdrop filter */
-    -webkit-backdrop-filter: blur(12px);
-    /* Add subtle border */
     border: 1px solid rgba(255, 255, 255, 0.1);
-    /* Round corners */
     border-radius: 1rem;
-    /* Add padding */
     padding: 1.5rem;
-    /* Add shadow */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    /* Add transition for hover effects */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Card hover state */
 .card:hover {
-    /* Move card up slightly */
     transform: translateY(-2px);
-    /* Increase shadow */
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    /* Change border color */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     border-color: rgba(56, 189, 248, 0.3);
 }
 
-/* Section heading styles */
-h2 {
-    /* Set font size */
-    font-size: 1.125rem;
-    /* Set font weight */
-    font-weight: 400;
-    /* Set text color */
-    color: var(--text-secondary);
-    /* Add margin at the bottom */
-    margin-bottom: 1rem;
-}
-
-/* Large metric display styles */
 .metric-large {
-    /* Set large font size */
     font-size: 3.5rem;
-    /* Set font weight */
     font-weight: 600;
-    /* Set line height */
     line-height: 1;
-    /* Add margin at the bottom */
     margin-bottom: 1rem;
-    /* Set text color */
     color: var(--text-primary);
 }
 
-/* Unit label styles */
 .unit {
-    /* Set font size */
     font-size: 1.5rem;
-    /* Set text color */
     color: var(--text-secondary);
-    /* Add margin to the left */
     margin-left: 0.25rem;
 }
 
-/* Sub-metrics container styles */
 .sub-metrics {
-    /* Use flexbox */
     display: flex;
-    /* Add gap between items */
     gap: 1.5rem;
-    /* Add margin at the bottom */
     margin-bottom: 1.5rem;
 }
 
-/* Individual sub-metric styles */
 .sub-metric {
-    /* Use flexbox */
     display: flex;
-    /* Stack items vertically */
     flex-direction: column;
 }
 
-/* Sub-metric label styles */
 .sub-metric .label {
-    /* Set font size */
     font-size: 0.75rem;
-    /* Set text color */
     color: var(--text-secondary);
-    /* Uppercase text */
     text-transform: uppercase;
-    /* Add letter spacing */
     letter-spacing: 0.05em;
 }
 
-/* Sub-metric value styles */
 .sub-metric .value {
-    /* Set font size */
     font-size: 1rem;
-    /* Set font weight */
     font-weight: 500;
 }
 
-/* Chart container styles */
 .chart-container {
-    /* Set position relative */
     position: relative;
-    /* Set height */
     height: 150px;
-    /* Set width */
     width: 100%;
 }
 
-/* IO Card Specifics */
-/* Grid layout for IO stats */
 .io-grid {
-    /* Use grid layout */
     display: grid;
-    /* Create two equal columns */
     grid-template-columns: 1fr 1fr;
-    /* Add gap between items */
     gap: 1rem;
 }
 
-/* IO item styles */
 .io-item {
-    /* Set background color */
     background: rgba(255, 255, 255, 0.05);
-    /* Add padding */
     padding: 1rem;
-    /* Round corners */
     border-radius: 0.5rem;
-    /* Use flexbox */
     display: flex;
-    /* Stack items vertically */
     flex-direction: column;
-    /* Center items horizontally */
     align-items: center;
-    /* Center text */
     text-align: center;
 }
 
-/* Disk List */
-/* Container for disk items */
 .disk-list {
-    /* Use flexbox */
     display: flex;
-    /* Stack items vertically */
     flex-direction: column;
-    /* Add gap between items */
     gap: 1rem;
 }
 
-/* Disk item styles */
 .disk-item {
-    /* Set background color */
     background: rgba(255, 255, 255, 0.03);
-    /* Add padding */
     padding: 1rem;
-    /* Round corners */
     border-radius: 0.5rem;
 }
 
-/* Disk header styles */
 .disk-header {
-    /* Use flexbox */
     display: flex;
-    /* Space items evenly */
     justify-content: space-between;
-    /* Add margin at the bottom */
     margin-bottom: 0.5rem;
-    /* Set font size */
     font-size: 0.875rem;
 }
 
-/* Disk progress bar background */
 .disk-bar-bg {
-    /* Set height */
     height: 6px;
-    /* Set background color */
     background: rgba(255, 255, 255, 0.1);
-    /* Round corners */
     border-radius: 3px;
-    /* Hide overflow */
     overflow: hidden;
 }
 
-/* Disk progress bar fill */
 .disk-bar-fill {
-    /* Set height */
     height: 100%;
-    /* Create gradient background */
     background: linear-gradient(90deg, var(--accent-color), #818cf8);
-    /* Round corners */
     border-radius: 3px;
-    /* Add transition for width changes */
     transition: width 0.5s ease;
 }
 
-/* Responsive adjustments */
-/* Media query for smaller screens */
-@media (max-width: 768px) {
+/* ============================================================================
+   TABLES
+   ============================================================================ */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-    /* Adjust dashboard grid */
+thead {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+td {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.btn-danger {
+    background: rgba(248, 113, 113, 0.2);
+    color: var(--danger-color);
+}
+
+.btn-danger:hover {
+    background: rgba(248, 113, 113, 0.3);
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+    
     .dashboard-grid {
-        /* Switch to single column */
         grid-template-columns: 1fr;
     }
-
-    /* Adjust large metric font size */
+    
     .metric-large {
-        /* Decrease font size */
         font-size: 2.5rem;
     }
 }
