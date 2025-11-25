@@ -1,0 +1,371 @@
+/* Define CSS variables for the color scheme and fonts */
+:root {
+    /* Background color for the body */
+    --bg-color: #0f172a;
+    /* Background color for cards with transparency */
+    --card-bg: rgba(30, 41, 59, 0.7);
+    /* Primary text color */
+    --text-primary: #f8fafc;
+    /* Secondary text color */
+    --text-secondary: #94a3b8;
+    /* Accent color for highlights */
+    --accent-color: #38bdf8;
+    /* Glow effect color for accents */
+    --accent-glow: rgba(56, 189, 248, 0.3);
+    /* Color for success indicators */
+    --success-color: #4ade80;
+    /* Color for warning indicators */
+    --warning-color: #facc15;
+    /* Color for danger indicators */
+    --danger-color: #f87171;
+    /* Font family for the application */
+    --font-family: 'Outfit', sans-serif;
+}
+
+/* Reset default browser styles */
+* {
+    /* Include padding and border in the element's total width and height */
+    box-sizing: border_box;
+    /* Remove default margin */
+    margin: 0;
+    /* Remove default padding */
+    padding: 0;
+}
+
+/* Body styles */
+body {
+    /* Set background color */
+    background-color: var(--bg-color);
+    /* Set text color */
+    color: var(--text-primary);
+    /* Set font family */
+    font-family: var(--font-family);
+    /* Ensure body takes at least the full viewport height */
+    min-height: 100vh;
+    /* Add radial gradients for a modern background effect */
+    background-image:
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
+    /* Prevent horizontal scrolling */
+    overflow-x: hidden;
+}
+
+/* Container for main content */
+.container {
+    /* Limit maximum width */
+    max-width: 1200px;
+    /* Center the container horizontally */
+    margin: 0 auto;
+    /* Add padding around the content */
+    padding: 2rem;
+}
+
+/* Header styles */
+header {
+    /* Use flexbox for layout */
+    display: flex;
+    /* Space items evenly */
+    justify-content: space-between;
+    /* Align items vertically */
+    align-items: center;
+    /* Add margin at the bottom */
+    margin-bottom: 2rem;
+}
+
+/* Main heading styles */
+h1 {
+    /* Set font weight */
+    font-weight: 600;
+    /* Set font size */
+    font-size: 2rem;
+    /* Adjust letter spacing */
+    letter-spacing: -0.025em;
+    /* Create a gradient text effect */
+    background: linear-gradient(to right, #38bdf8, #818cf8);
+    /* Clip background to text (standard property) */
+    background-clip: text;
+    /* Clip background to text (Webkit prefix) */
+    -webkit-background-clip: text;
+    /* Make text transparent to show background */
+    -webkit-text-fill-color: transparent;
+}
+
+/* Status indicator styles */
+.status-indicator {
+    /* Use flexbox */
+    display: flex;
+    /* Align items vertically */
+    align-items: center;
+    /* Add gap between dot and text */
+    gap: 0.5rem;
+    /* Set font size */
+    font-size: 0.875rem;
+    /* Set text color */
+    color: var(--success-color);
+    /* Set background color with transparency */
+    background: rgba(74, 222, 128, 0.1);
+    /* Add padding */
+    padding: 0.25rem 0.75rem;
+    /* Make it pill-shaped */
+    border-radius: 9999px;
+}
+
+/* Status dot styles */
+.dot {
+    /* Set width */
+    width: 8px;
+    /* Set height */
+    height: 8px;
+    /* Set background color */
+    background-color: var(--success-color);
+    /* Make it circular */
+    border-radius: 50%;
+    /* Add pulse animation */
+    animation: pulse 2s infinite;
+}
+
+/* Pulse animation keyframes */
+@keyframes pulse {
+
+    /* Start with a solid shadow */
+    0% {
+        box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+    }
+
+    /* Expand shadow and fade out */
+    70% {
+        box-shadow: 0 0 0 6px rgba(74, 222, 128, 0);
+    }
+
+    /* End with no shadow */
+    100% {
+        box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+    }
+}
+
+/* Dashboard grid layout */
+.dashboard-grid {
+    /* Use grid layout */
+    display: grid;
+    /* Create responsive columns */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    /* Add gap between grid items */
+    gap: 1.5rem;
+}
+
+/* Card component styles */
+.card {
+    /* Set background color */
+    background: var(--card-bg);
+    /* Add blur effect to background */
+    backdrop-filter: blur(12px);
+    /* Webkit prefix for backdrop filter */
+    -webkit-backdrop-filter: blur(12px);
+    /* Add subtle border */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    /* Round corners */
+    border-radius: 1rem;
+    /* Add padding */
+    padding: 1.5rem;
+    /* Add shadow */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    /* Add transition for hover effects */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Card hover state */
+.card:hover {
+    /* Move card up slightly */
+    transform: translateY(-2px);
+    /* Increase shadow */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    /* Change border color */
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
+/* Section heading styles */
+h2 {
+    /* Set font size */
+    font-size: 1.125rem;
+    /* Set font weight */
+    font-weight: 400;
+    /* Set text color */
+    color: var(--text-secondary);
+    /* Add margin at the bottom */
+    margin-bottom: 1rem;
+}
+
+/* Large metric display styles */
+.metric-large {
+    /* Set large font size */
+    font-size: 3.5rem;
+    /* Set font weight */
+    font-weight: 600;
+    /* Set line height */
+    line-height: 1;
+    /* Add margin at the bottom */
+    margin-bottom: 1rem;
+    /* Set text color */
+    color: var(--text-primary);
+}
+
+/* Unit label styles */
+.unit {
+    /* Set font size */
+    font-size: 1.5rem;
+    /* Set text color */
+    color: var(--text-secondary);
+    /* Add margin to the left */
+    margin-left: 0.25rem;
+}
+
+/* Sub-metrics container styles */
+.sub-metrics {
+    /* Use flexbox */
+    display: flex;
+    /* Add gap between items */
+    gap: 1.5rem;
+    /* Add margin at the bottom */
+    margin-bottom: 1.5rem;
+}
+
+/* Individual sub-metric styles */
+.sub-metric {
+    /* Use flexbox */
+    display: flex;
+    /* Stack items vertically */
+    flex-direction: column;
+}
+
+/* Sub-metric label styles */
+.sub-metric .label {
+    /* Set font size */
+    font-size: 0.75rem;
+    /* Set text color */
+    color: var(--text-secondary);
+    /* Uppercase text */
+    text-transform: uppercase;
+    /* Add letter spacing */
+    letter-spacing: 0.05em;
+}
+
+/* Sub-metric value styles */
+.sub-metric .value {
+    /* Set font size */
+    font-size: 1rem;
+    /* Set font weight */
+    font-weight: 500;
+}
+
+/* Chart container styles */
+.chart-container {
+    /* Set position relative */
+    position: relative;
+    /* Set height */
+    height: 150px;
+    /* Set width */
+    width: 100%;
+}
+
+/* IO Card Specifics */
+/* Grid layout for IO stats */
+.io-grid {
+    /* Use grid layout */
+    display: grid;
+    /* Create two equal columns */
+    grid-template-columns: 1fr 1fr;
+    /* Add gap between items */
+    gap: 1rem;
+}
+
+/* IO item styles */
+.io-item {
+    /* Set background color */
+    background: rgba(255, 255, 255, 0.05);
+    /* Add padding */
+    padding: 1rem;
+    /* Round corners */
+    border-radius: 0.5rem;
+    /* Use flexbox */
+    display: flex;
+    /* Stack items vertically */
+    flex-direction: column;
+    /* Center items horizontally */
+    align-items: center;
+    /* Center text */
+    text-align: center;
+}
+
+/* Disk List */
+/* Container for disk items */
+.disk-list {
+    /* Use flexbox */
+    display: flex;
+    /* Stack items vertically */
+    flex-direction: column;
+    /* Add gap between items */
+    gap: 1rem;
+}
+
+/* Disk item styles */
+.disk-item {
+    /* Set background color */
+    background: rgba(255, 255, 255, 0.03);
+    /* Add padding */
+    padding: 1rem;
+    /* Round corners */
+    border-radius: 0.5rem;
+}
+
+/* Disk header styles */
+.disk-header {
+    /* Use flexbox */
+    display: flex;
+    /* Space items evenly */
+    justify-content: space-between;
+    /* Add margin at the bottom */
+    margin-bottom: 0.5rem;
+    /* Set font size */
+    font-size: 0.875rem;
+}
+
+/* Disk progress bar background */
+.disk-bar-bg {
+    /* Set height */
+    height: 6px;
+    /* Set background color */
+    background: rgba(255, 255, 255, 0.1);
+    /* Round corners */
+    border-radius: 3px;
+    /* Hide overflow */
+    overflow: hidden;
+}
+
+/* Disk progress bar fill */
+.disk-bar-fill {
+    /* Set height */
+    height: 100%;
+    /* Create gradient background */
+    background: linear-gradient(90deg, var(--accent-color), #818cf8);
+    /* Round corners */
+    border-radius: 3px;
+    /* Add transition for width changes */
+    transition: width 0.5s ease;
+}
+
+/* Responsive adjustments */
+/* Media query for smaller screens */
+@media (max-width: 768px) {
+
+    /* Adjust dashboard grid */
+    .dashboard-grid {
+        /* Switch to single column */
+        grid-template-columns: 1fr;
+    }
+
+    /* Adjust large metric font size */
+    .metric-large {
+        /* Decrease font size */
+        font-size: 2.5rem;
+    }
+}

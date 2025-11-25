@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!-- Define the document language as English -->
+<html lang="en">
+
+<head>
+    <!-- Set the character encoding to UTF-8 -->
+    <meta charset="UTF-8">
+    <!-- Ensure proper rendering and touch zooming on mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Set the page title -->
+    <title>System Monitor</title>
+    <!-- Preconnect to Google Fonts server for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <!-- Preconnect to Google Fonts static server -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Import the 'Outfit' font family from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Link to the custom CSS file using Flask's url_for -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Import Chart.js library from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <!-- Main container for the application content -->
+    <div class="container">
+        <!-- Header section containing title and status -->
+        <header>
+            <!-- Application title -->
+            <h1>System Monitor</h1>
+            <!-- Live status indicator -->
+            <div class="status-indicator">
+                <!-- Pulsing dot animation -->
+                <span class="dot"></span> Live
+            </div>
+        </header>
+
+        <!-- Main dashboard grid layout -->
+        <main class="dashboard-grid">
+            <!-- CPU Section -->
+            <div class="card cpu-card">
+                <!-- Section title -->
+                <h2>CPU</h2>
+                <!-- Large metric display for CPU percentage -->
+                <div class="metric-large">
+                    <!-- Span for CPU percentage value -->
+                    <span id="cpu-percent">0</span><span class="unit">%</span>
+                </div>
+                <!-- Sub-metrics container for Frequency and Temp -->
+                <div class="sub-metrics">
+                    <!-- CPU Frequency sub-metric -->
+                    <div class="sub-metric">
+                        <span class="label">Frequency</span>
+                        <span class="value" id="cpu-freq">0MHz</span>
+                    </div>
+                    <!-- CPU Temperature sub-metric -->
+                    <div class="sub-metric">
+                        <span class="label">Temp</span>
+                        <span class="value" id="cpu-temp">--</span>
+                    </div>
+                </div>
+                <!-- Container for the CPU usage chart -->
+                <div class="chart-container">
+                    <canvas id="cpuChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Memory Section -->
+            <div class="card memory-card">
+                <!-- Section title -->
+                <h2>Memory</h2>
+                <!-- Large metric display for Memory percentage -->
+                <div class="metric-large">
+                    <!-- Span for Memory percentage value -->
+                    <span id="mem-percent">0</span><span class="unit">%</span>
+                </div>
+                <!-- Sub-metrics container for Used and Total memory -->
+                <div class="sub-metrics">
+                    <!-- Used Memory sub-metric -->
+                    <div class="sub-metric">
+                        <span class="label">Used</span>
+                        <span class="value" id="mem-used">0GB</span>
+                    </div>
+                    <!-- Total Memory sub-metric -->
+                    <div class="sub-metric">
+                        <span class="label">Total</span>
+                        <span class="value" id="mem-total">0GB</span>
+                    </div>
+                </div>
+                <!-- Container for the Memory usage chart -->
+                <div class="chart-container">
+                    <canvas id="memoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Disk I/O Section -->
+            <div class="card io-card">
+                <!-- Section title -->
+                <h2>Disk I/O</h2>
+                <!-- Grid layout for I/O stats -->
+                <div class="io-grid">
+                    <!-- Read bytes stat -->
+                    <div class="io-item">
+                        <span class="label">Read</span>
+                        <span class="value" id="io-read">0B</span>
+                    </div>
+                    <!-- Write bytes stat -->
+                    <div class="io-item">
+                        <span class="label">Write</span>
+                        <span class="value" id="io-write">0B</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disk Usage Section -->
+            <div class="card disk-card">
+                <!-- Section title -->
+                <h2>Disk Usage</h2>
+                <!-- Container for dynamic disk usage items -->
+                <div id="disk-container" class="disk-list">
+                    <!-- Disk items will be injected here by JavaScript -->
+                </div>
+            </div>
+        </main>
+    </div>
+    <!-- Link to the custom JavaScript file using Flask's url_for -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>

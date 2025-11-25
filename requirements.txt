@@ -1,0 +1,6 @@
+flask
+psutil
+python-dotenv
+pytest
+flask-migrate
+gunicorn
