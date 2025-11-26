@@ -746,10 +746,12 @@ tr:hover {
 }
 
 .connection-table thead {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
     position: sticky;
     top: 0;
     z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .connection-table th {
