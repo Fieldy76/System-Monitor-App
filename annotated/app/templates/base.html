@@ -23,27 +23,27 @@
         <ul class="nav-menu">  <!-- <ul class="nav-menu"> -->
             <li><a href="{{ url_for('main.index') }}"  <!-- <li><a href="{{ url_for('main.index') }}" -->
                     class="{% if request.endpoint == 'main.index' %}active{% endif %}">  <!-- class="{% if request.endpoint == 'main.index' %}active{% endif %}"> -->
-                    <span class="icon">📊</span> Dashboard  <!-- <span class="icon">📊</span> Dashboard -->
+                    <i class="fa-solid fa-gauge-high fa-fw icon"></i> Dashboard  <!-- <i class="fa-solid fa-gauge-high fa-fw icon"></i> Dashboard -->
                 </a></li>  <!-- </a></li> -->
             <li><a href="{{ url_for('main.processes') }}"  <!-- <li><a href="{{ url_for('main.processes') }}" -->
                     class="{% if request.endpoint == 'main.processes' %}active{% endif %}">  <!-- class="{% if request.endpoint == 'main.processes' %}active{% endif %}"> -->
-                    <span class="icon">⚙️</span> Processes  <!-- <span class="icon">⚙️</span> Processes -->
+                    <i class="fa-solid fa-microchip fa-fw icon"></i> Processes  <!-- <i class="fa-solid fa-microchip fa-fw icon"></i> Processes -->
                 </a></li>  <!-- </a></li> -->
             <li><a href="{{ url_for('main.alerts_page') }}"  <!-- <li><a href="{{ url_for('main.alerts_page') }}" -->
                     class="{% if request.endpoint == 'main.alerts_page' %}active{% endif %}">  <!-- class="{% if request.endpoint == 'main.alerts_page' %}active{% endif %}"> -->
-                    <span class="icon">🔔</span> Alerts  <!-- <span class="icon">🔔</span> Alerts -->
+                    <i class="fa-solid fa-bell fa-fw icon"></i> Alerts  <!-- <i class="fa-solid fa-bell fa-fw icon"></i> Alerts -->
                 </a></li>  <!-- </a></li> -->
             <li><a href="{{ url_for('main.servers_page') }}"  <!-- <li><a href="{{ url_for('main.servers_page') }}" -->
                     class="{% if request.endpoint == 'main.servers_page' %}active{% endif %}">  <!-- class="{% if request.endpoint == 'main.servers_page' %}active{% endif %}"> -->
-                    <span class="icon">🖥️</span> Servers  <!-- <span class="icon">🖥️</span> Servers -->
+                    <i class="fa-solid fa-server fa-fw icon"></i> Servers  <!-- <i class="fa-solid fa-server fa-fw icon"></i> Servers -->
                 </a></li>  <!-- </a></li> -->
             <li><a href="{{ url_for('main.health_dashboard') }}"  <!-- <li><a href="{{ url_for('main.health_dashboard') }}" -->
                     class="{% if request.endpoint == 'main.health_dashboard' %}active{% endif %}">  <!-- class="{% if request.endpoint == 'main.health_dashboard' %}active{% endif %}"> -->
-                    <span class="icon">❤️</span> Health  <!-- <span class="icon">❤️</span> Health -->
+                    <i class="fa-solid fa-heart-pulse fa-fw icon"></i> Health  <!-- <i class="fa-solid fa-heart-pulse fa-fw icon"></i> Health -->
                 </a></li>  <!-- </a></li> -->
             <li><a href="{{ url_for('main.settings') }}"  <!-- <li><a href="{{ url_for('main.settings') }}" -->
                     class="{% if request.endpoint == 'main.settings' %}active{% endif %}">  <!-- class="{% if request.endpoint == 'main.settings' %}active{% endif %}"> -->
-                    <span class="icon">⚙️</span> Settings  <!-- <span class="icon">⚙️</span> Settings -->
+                    <i class="fa-solid fa-gear fa-fw icon"></i> Settings  <!-- <i class="fa-solid fa-gear fa-fw icon"></i> Settings -->
                 </a></li>  <!-- </a></li> -->
         </ul>  <!-- </ul> -->
         <div class="sidebar-footer">  <!-- <div class="sidebar-footer"> -->
