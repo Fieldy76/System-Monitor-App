@@ -3,7 +3,7 @@ from flask import current_app
 from flask_mail import Message
 from app import mail
 from app.models import db, AlertRule, AlertHistory, SystemMetric, NetworkMetric, Server
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from twilio.rest import Client
 
 
@@ -44,7 +44,7 @@ def check_alert_rule(rule):
                 rule_id=rule.id,
                 server_id=server.id
             ).filter(
-                AlertHistory.triggered_at >= datetime.utcnow() - timedelta(seconds=rule.duration)
+                AlertHistory.triggered_at >= datetime.now(timezone.utc) - timedelta(seconds=rule.duration)
             ).first()
             
             # Only trigger if no recent alert exists
@@ -161,7 +161,7 @@ Threshold: {rule.comparison} {rule.threshold}
 
 Message: {message}
 
-Triggered at: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}
+Triggered at: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}
 
 ---
 This is an automated alert from System Monitor.
@@ -289,7 +289,7 @@ def send_slack_alert(rule, server, metric_value, message):
                     "elements": [
                         {
                             "type": "mrkdwn",
-                            "text": f"Triggered at {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}"
+                            "text": f"Triggered at {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}"
                         }
                     ]
                 }

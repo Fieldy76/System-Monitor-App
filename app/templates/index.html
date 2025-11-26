@@ -102,12 +102,13 @@
     // Chart data storage
     const cpuData = [];
     const memoryData = [];
+    const networkData = [];
     const labels = [];
 
     let grid = null;
     let cpuChart = null;
     let memoryChart = null;
-
+    let networkChart = null;
     // Default layout configuration
     const defaultLayout = [
         { x: 0, y: 0, w: 4, h: 4, id: 'cpu', content: document.getElementById('tpl-cpu').innerHTML },
@@ -237,7 +238,6 @@
                 }
             });
         }
-
         // Memory Chart
         const memCanvas = document.getElementById('memory-widget-chart');
         if (memCanvas) {
@@ -266,6 +266,35 @@
                 }
             });
         }
+        // Network Chart
+        const netCanvas = document.getElementById('network-widget-chart');
+        if (netCanvas) {
+            if (networkChart) networkChart.destroy();
+            networkChart = new Chart(netCanvas, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Network Sent (bytes)',
+                        data: networkData,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                        x: { display: false }
+                    }
+                }
+            });
+        }
+
     }
 
     // Server selection
@@ -300,6 +329,8 @@
             if (data.network) {
                 updateText('network-widget-sent', data.network.bytes_sent);
                 updateText('network-widget-recv', data.network.bytes_recv);
+                // Push to network chart data
+                networkData.push(data.network.bytes_sent_raw);
             }
             if (data.connections) {
                 updateText('network-widget-connections', data.connections.total);
@@ -342,11 +373,12 @@
                 labels.shift();
                 cpuData.shift();
                 memoryData.shift();
+                networkData.shift();
             }
 
             if (cpuChart) cpuChart.update('none');
             if (memoryChart) memoryChart.update('none');
-
+            if (networkChart) networkChart.update('none');
         } catch (error) {
             console.error('Error fetching metrics:', error);
         }

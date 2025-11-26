@@ -3,7 +3,7 @@ import pandas as pd
 from flask import Response
 from io import StringIO, BytesIO
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.models import SystemMetric, NetworkMetric, Server
 
 
@@ -25,7 +25,7 @@ def export_metrics_to_csv(server_id=None, start_date=None, end_date=None, metric
     
     # Set default date range if not provided
     if not end_date:
-        end_date = datetime.utcnow()
+        end_date = datetime.now(timezone.utc)
     if not start_date:
         start_date = end_date - timedelta(days=7)  # Last 7 days by default
     
@@ -127,12 +127,12 @@ def export_metrics_to_json(server_id=None, start_date=None, end_date=None, metri
     
     # Set default date range if not provided
     if not end_date:
-        end_date = datetime.utcnow()
+        end_date = datetime.now(timezone.utc)
     if not start_date:
         start_date = end_date - timedelta(days=7)  # Last 7 days by default
     
     result = {
-        'export_date': datetime.utcnow().isoformat(),
+        'export_date': datetime.now(timezone.utc).isoformat(),
         'start_date': start_date.isoformat(),
         'end_date': end_date.isoformat(),
         'metrics': {}
@@ -229,7 +229,7 @@ def create_export_response(data, format_type, filename_prefix='system_monitor_ex
     Returns:
         Flask Response object
     """
-    timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
     filename = f"{filename_prefix}_{timestamp}.{format_type}"
     
     if format_type == 'csv':

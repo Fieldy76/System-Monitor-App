@@ -3,7 +3,7 @@ import psutil
 import requests
 from flask import Blueprint, jsonify, render_template, request, current_app
 from flask_login import login_required, current_user
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.models import (db, Server, SystemMetric, NetworkMetric, ProcessSnapshot,
                          AlertRule, AlertHistory, UserPreference)
 from app.export import export_metrics_to_csv, export_metrics_to_json, create_export_response
@@ -151,6 +151,8 @@ def metrics():
     network_info = {
         'bytes_sent': get_size(net_io.bytes_sent),
         'bytes_recv': get_size(net_io.bytes_recv),
+        'bytes_sent_raw': net_io.bytes_sent,
+        'bytes_recv_raw': net_io.bytes_recv,
         'packets_sent': net_io.packets_sent,
         'packets_recv': net_io.packets_recv
     }
@@ -193,7 +195,7 @@ def fetch_remote_metrics(server):
         response.raise_for_status()
         
         # Update last_seen
-        server.last_seen = datetime.utcnow()
+        server.last_seen = datetime.now(timezone.utc)
         db.session.commit()
         
         return jsonify(response.json())
@@ -221,7 +223,7 @@ def metrics_history():
     if not server_id:
         return jsonify({'error': 'Server not found'}), 404
     
-    start_time = datetime.utcnow() - timedelta(hours=hours)
+    start_time = datetime.now(timezone.utc) - timedelta(hours=hours)
     
     if metric_type == 'system':
         metrics = SystemMetric.query.filter(
@@ -554,7 +556,7 @@ def export_csv():
     days = request.args.get('days', default=7, type=int)
     metric_types = request.args.getlist('metrics') or ['system', 'network']
     
-    end_date = datetime.utcnow()
+    end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=days)
     
     csv_data = export_metrics_to_csv(server_id, start_date, end_date, metric_types)
@@ -569,7 +571,7 @@ def export_json():
     days = request.args.get('days', default=7, type=int)
     metric_types = request.args.getlist('metrics') or ['system', 'network']
     
-    end_date = datetime.utcnow()
+    end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=days)
     
     json_data = export_metrics_to_json(server_id, start_date, end_date, metric_types)
@@ -659,7 +661,7 @@ def update_health_service(service_id):
     if 'is_active' in data:
         service.is_active = data['is_active']
     
-    service.updated_at = datetime.utcnow()
+    service.updated_at = datetime.now(timezone.utc)
     db.session.commit()
     
     return jsonify({

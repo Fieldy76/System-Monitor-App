@@ -1,6 +1,6 @@
 """Utility functions for checking external service health."""
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import current_app
 
 
@@ -17,9 +17,9 @@ def check_http_service(url, name, timeout=5):
         tuple: (is_up, status_code, response_time_ms, error_message)
     """
     try:
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         response = requests.get(url, timeout=timeout, allow_redirects=True)
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         
         response_time = (end_time - start_time).total_seconds() * 1000  # Convert to milliseconds
         
@@ -57,12 +57,12 @@ def check_tcp_service(host, port, timeout=5):
     import socket
     
     try:
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(timeout)
         
         result = sock.connect_ex((host, port))
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         sock.close()
         
         response_time = (end_time - start_time).total_seconds() * 1000

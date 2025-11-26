@@ -1,6 +1,6 @@
 """Background tasks for metric collection and alert checking."""
 from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import psutil
 from app.models import db, Server, SystemMetric, NetworkMetric, ProcessSnapshot, AlertRule, AlertHistory
 from flask import current_app
@@ -120,7 +120,7 @@ def collect_system_metrics():
         db.session.commit()
         
         # Update server last_seen
-        local_server.last_seen = datetime.utcnow()
+        local_server.last_seen = datetime.now(timezone.utc)
         db.session.commit()
         
     except Exception as e:
@@ -190,7 +190,7 @@ def cleanup_old_metrics():
     """Delete old metrics based on data retention policy."""
     try:
         retention_days = current_app.config.get('DATA_RETENTION_DAYS', 30)
-        cutoff_date = datetime.utcnow() - timedelta(days=retention_days)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=retention_days)
         
         # Delete old system metrics
         SystemMetric.query.filter(SystemMetric.timestamp < cutoff_date).delete()
@@ -202,7 +202,7 @@ def cleanup_old_metrics():
         ProcessSnapshot.query.filter(ProcessSnapshot.timestamp < cutoff_date).delete()
         
         # Delete old alert history (keep for 90 days)
-        alert_cutoff = datetime.utcnow() - timedelta(days=90)
+        alert_cutoff = datetime.now(timezone.utc) - timedelta(days=90)
         AlertHistory.query.filter(AlertHistory.triggered_at < alert_cutoff).delete()
         
         db.session.commit()
@@ -237,12 +237,12 @@ def run_health_checks():
             )
             
             # Update service status
-            service.last_check_time = datetime.utcnow()
+            service.last_check_time = datetime.now(timezone.utc)
             service.is_up = is_up
             service.status_code = status_code
             service.response_time = response_time
             service.error_message = error_message
-            service.updated_at = datetime.utcnow()
+            service.updated_at = datetime.now(timezone.utc)
             
             db.session.commit()
             

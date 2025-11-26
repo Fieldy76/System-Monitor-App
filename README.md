@@ -30,7 +30,7 @@ A comprehensive, production-ready system monitoring web application built with F
 - **Memory Tracking**: Monitor RAM usage with total, used, and available statistics
 - **Disk Usage**: View usage statistics for all mounted partitions
 - **Disk I/O**: Track read/write operations and data transfer rates
-- **Network Monitoring**: Bandwidth usage, packet counts, and active connections
+- **Network Monitoring**: Bandwidth usage, packet counts, active connections, and real-time traffic graph
 - **Live Updates**: Configurable refresh intervals (1s, 2s, 5s, 10s, 30s)
 
 ### 📊 Historical Data & Analytics
@@ -133,7 +133,7 @@ A comprehensive, production-ready system monitoring web application built with F
 
 ## 🖼️ Screenshots
 
-> **Note**: The application features a premium dark mode interface with gradient accents, real-time charts, and smooth animations.
+> **Note**: The application features a premium dark mode interface with gradient accents, real-time charts (including network traffic), and smooth animations.
 
 ## 🛠️ Technology Stack
 
