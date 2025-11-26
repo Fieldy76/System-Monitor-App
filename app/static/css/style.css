@@ -301,6 +301,20 @@ body {
     transition: all 0.2s ease;
 }
 
+/* Ensure select dropdowns show all options properly */
+.form-group select {
+    cursor: pointer;
+    appearance: auto;
+    -webkit-appearance: menulist;
+    -moz-appearance: menulist;
+}
+
+.form-group select option {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+}
+
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
