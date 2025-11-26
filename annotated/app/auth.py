@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify  # from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user  # from flask_login import login_user, logout_user, login_required, current_user
 from app.models import db, User, UserPreference  # from app.models import db, User, UserPreference
-from datetime import datetime  # from datetime import datetime
+from datetime import datetime, timezone  # from datetime import datetime, timezone
   # blank line
 auth = Blueprint('auth', __name__)  # auth = Blueprint('auth', __name__)
   # blank line
@@ -30,7 +30,7 @@ def login():  # def login():
         # Check credentials  # # Check credentials
         if user and user.check_password(password):  # if user and user.check_password(password):
             login_user(user, remember=remember)  # login_user(user, remember=remember)
-            user.last_login = datetime.utcnow()  # user.last_login = datetime.utcnow()
+            user.last_login = datetime.now(timezone.utc)  # user.last_login = datetime.now(timezone.utc)
             db.session.commit()  # db.session.commit()
               # blank line
             # Redirect to next page or dashboard  # # Redirect to next page or dashboard

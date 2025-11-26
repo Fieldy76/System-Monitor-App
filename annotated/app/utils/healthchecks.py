@@ -1,6 +1,6 @@
 """Utility functions for checking external service health."""  # """Utility functions for checking external service health."""
 import requests  # import requests
-from datetime import datetime  # from datetime import datetime
+from datetime import datetime, timezone  # from datetime import datetime, timezone
 from flask import current_app  # from flask import current_app
   # blank line
   # blank line
@@ -17,9 +17,9 @@ def check_http_service(url, name, timeout=5):  # def check_http_service(url, nam
         tuple: (is_up, status_code, response_time_ms, error_message)  # tuple: (is_up, status_code, response_time_ms, error_message)
     """  # """
     try:  # try:
-        start_time = datetime.utcnow()  # start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)  # start_time = datetime.now(timezone.utc)
         response = requests.get(url, timeout=timeout, allow_redirects=True)  # response = requests.get(url, timeout=timeout, allow_redirects=True)
-        end_time = datetime.utcnow()  # end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)  # end_time = datetime.now(timezone.utc)
           # blank line
         response_time = (end_time - start_time).total_seconds() * 1000  # Convert to milliseconds  # response_time = (end_time - start_time).total_seconds() * 1000  # Convert to milliseconds
           # blank line
@@ -57,12 +57,12 @@ def check_tcp_service(host, port, timeout=5):  # def check_tcp_service(host, por
     import socket  # import socket
       # blank line
     try:  # try:
-        start_time = datetime.utcnow()  # start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)  # start_time = datetime.now(timezone.utc)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(timeout)  # sock.settimeout(timeout)
           # blank line
         result = sock.connect_ex((host, port))  # result = sock.connect_ex((host, port))
-        end_time = datetime.utcnow()  # end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)  # end_time = datetime.now(timezone.utc)
         sock.close()  # sock.close()
           # blank line
         response_time = (end_time - start_time).total_seconds() * 1000  # response_time = (end_time - start_time).total_seconds() * 1000

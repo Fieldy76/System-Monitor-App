@@ -72,6 +72,34 @@
     <div class="grid-stack">  <!-- <div class="grid-stack"> -->
         <!-- Widgets will be injected here by Gridstack -->  <!-- <!-- Widgets will be injected here by Gridstack --> -->
     </div>  <!-- </div> -->
+  <!-- blank line -->
+    <!-- Network Connections Modal -->  <!-- <!-- Network Connections Modal --> -->
+    <div id="connection-modal" class="modal">  <!-- <div id="connection-modal" class="modal"> -->
+        <div class="modal-content">  <!-- <div class="modal-content"> -->
+            <div class="modal-header">  <!-- <div class="modal-header"> -->
+                <h2 id="connection-modal-title">Network Connections</h2>  <!-- <h2 id="connection-modal-title">Network Connections</h2> -->
+                <button class="modal-close" onclick="closeConnectionModal()">&times;</button>  <!-- <button class="modal-close" onclick="closeConnectionModal()">&times;</button> -->
+            </div>  <!-- </div> -->
+            <div class="modal-body">  <!-- <div class="modal-body"> -->
+                <table class="connection-table">  <!-- <table class="connection-table"> -->
+                    <thead>  <!-- <thead> -->
+                        <tr>  <!-- <tr> -->
+                            <th>Protocol</th>  <!-- <th>Protocol</th> -->
+                            <th>Local Address</th>  <!-- <th>Local Address</th> -->
+                            <th>Remote Address</th>  <!-- <th>Remote Address</th> -->
+                            <th>Status</th>  <!-- <th>Status</th> -->
+                            <th>PID</th>  <!-- <th>PID</th> -->
+                            <th>Process</th>  <!-- <th>Process</th> -->
+                        </tr>  <!-- </tr> -->
+                    </thead>  <!-- </thead> -->
+                    <tbody id="connection-table-body">  <!-- <tbody id="connection-table-body"> -->
+                        <!-- Connection rows will be inserted here -->  <!-- <!-- Connection rows will be inserted here --> -->
+                    </tbody>  <!-- </tbody> -->
+                </table>  <!-- </table> -->
+            </div>  <!-- </div> -->
+        </div>  <!-- </div> -->
+    </div>  <!-- </div> -->
+  <!-- blank line -->
 </div>  <!-- </div> -->
   <!-- blank line -->
 <div id="config-data" data-refresh-interval="{{ preferences.refresh_interval if preferences else 2000 }}"  <!-- <div id="config-data" data-refresh-interval="{{ preferences.refresh_interval if preferences else 2000 }}" -->
@@ -102,12 +130,13 @@
     // Chart data storage  <!-- // Chart data storage -->
     const cpuData = [];  <!-- const cpuData = []; -->
     const memoryData = [];  <!-- const memoryData = []; -->
+    const networkData = [];  <!-- const networkData = []; -->
     const labels = [];  <!-- const labels = []; -->
   <!-- blank line -->
     let grid = null;  <!-- let grid = null; -->
     let cpuChart = null;  <!-- let cpuChart = null; -->
     let memoryChart = null;  <!-- let memoryChart = null; -->
-  <!-- blank line -->
+    let networkChart = null;  <!-- let networkChart = null; -->
     // Default layout configuration  <!-- // Default layout configuration -->
     const defaultLayout = [  <!-- const defaultLayout = [ -->
         { x: 0, y: 0, w: 4, h: 4, id: 'cpu', content: document.getElementById('tpl-cpu').innerHTML },  <!-- { x: 0, y: 0, w: 4, h: 4, id: 'cpu', content: document.getElementById('tpl-cpu').innerHTML }, -->
@@ -237,7 +266,6 @@
                 }  <!-- } -->
             });  <!-- }); -->
         }  <!-- } -->
-  <!-- blank line -->
         // Memory Chart  <!-- // Memory Chart -->
         const memCanvas = document.getElementById('memory-widget-chart');  <!-- const memCanvas = document.getElementById('memory-widget-chart'); -->
         if (memCanvas) {  <!-- if (memCanvas) { -->
@@ -266,6 +294,35 @@
                 }  <!-- } -->
             });  <!-- }); -->
         }  <!-- } -->
+        // Network Chart  <!-- // Network Chart -->
+        const netCanvas = document.getElementById('network-widget-chart');  <!-- const netCanvas = document.getElementById('network-widget-chart'); -->
+        if (netCanvas) {  <!-- if (netCanvas) { -->
+            if (networkChart) networkChart.destroy();  <!-- if (networkChart) networkChart.destroy(); -->
+            networkChart = new Chart(netCanvas, {  <!-- networkChart = new Chart(netCanvas, { -->
+                type: 'line',  <!-- type: 'line', -->
+                data: {  <!-- data: { -->
+                    labels: labels,  <!-- labels: labels, -->
+                    datasets: [{  <!-- datasets: [{ -->
+                        label: 'Network Sent (bytes)',  <!-- label: 'Network Sent (bytes)', -->
+                        data: networkData,  <!-- data: networkData, -->
+                        borderColor: 'rgba(255, 99, 132, 1)',  <!-- borderColor: 'rgba(255, 99, 132, 1)', -->
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',  <!-- backgroundColor: 'rgba(255, 99, 132, 0.1)', -->
+                        tension: 0.4,  <!-- tension: 0.4, -->
+                        fill: true  <!-- fill: true -->
+                    }]  <!-- }] -->
+                },  <!-- }, -->
+                options: {  <!-- options: { -->
+                    responsive: true,  <!-- responsive: true, -->
+                    maintainAspectRatio: false,  <!-- maintainAspectRatio: false, -->
+                    plugins: { legend: { display: false } },  <!-- plugins: { legend: { display: false } }, -->
+                    scales: {  <!-- scales: { -->
+                        y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } },  <!-- y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } }, -->
+                        x: { display: false }  <!-- x: { display: false } -->
+                    }  <!-- } -->
+                }  <!-- } -->
+            });  <!-- }); -->
+        }  <!-- } -->
+  <!-- blank line -->
     }  <!-- } -->
   <!-- blank line -->
     // Server selection  <!-- // Server selection -->
@@ -300,6 +357,8 @@
             if (data.network) {  <!-- if (data.network) { -->
                 updateText('network-widget-sent', data.network.bytes_sent);  <!-- updateText('network-widget-sent', data.network.bytes_sent); -->
                 updateText('network-widget-recv', data.network.bytes_recv);  <!-- updateText('network-widget-recv', data.network.bytes_recv); -->
+                // Push to network chart data  <!-- // Push to network chart data -->
+                networkData.push(data.network.bytes_sent_raw);  <!-- networkData.push(data.network.bytes_sent_raw); -->
             }  <!-- } -->
             if (data.connections) {  <!-- if (data.connections) { -->
                 updateText('network-widget-connections', data.connections.total);  <!-- updateText('network-widget-connections', data.connections.total); -->
@@ -342,11 +401,12 @@
                 labels.shift();  <!-- labels.shift(); -->
                 cpuData.shift();  <!-- cpuData.shift(); -->
                 memoryData.shift();  <!-- memoryData.shift(); -->
+                networkData.shift();  <!-- networkData.shift(); -->
             }  <!-- } -->
   <!-- blank line -->
             if (cpuChart) cpuChart.update('none');  <!-- if (cpuChart) cpuChart.update('none'); -->
             if (memoryChart) memoryChart.update('none');  <!-- if (memoryChart) memoryChart.update('none'); -->
-  <!-- blank line -->
+            if (networkChart) networkChart.update('none');  <!-- if (networkChart) networkChart.update('none'); -->
         } catch (error) {  <!-- } catch (error) { -->
             console.error('Error fetching metrics:', error);  <!-- console.error('Error fetching metrics:', error); -->
         }  <!-- } -->
@@ -356,5 +416,72 @@
         const el = document.getElementById(id);  <!-- const el = document.getElementById(id); -->
         if (el) el.textContent = value;  <!-- if (el) el.textContent = value; -->
     }  <!-- } -->
+  <!-- blank line -->
+    // Network Connection Details Modal  <!-- // Network Connection Details Modal -->
+    async function showConnectionDetails(status) {  <!-- async function showConnectionDetails(status) { -->
+        try {  <!-- try { -->
+            const url = status === 'all'  <!-- const url = status === 'all' -->
+                ? '/api/network/connections'  <!-- ? '/api/network/connections' -->
+                : `/api/network/connections?status=${status}`;  <!-- : `/api/network/connections?status=${status}`; -->
+  <!-- blank line -->
+            const response = await fetch(url);  <!-- const response = await fetch(url); -->
+            const data = await response.json();  <!-- const data = await response.json(); -->
+  <!-- blank line -->
+            if (data.error) {  <!-- if (data.error) { -->
+                alert(`Error: ${data.error}`);  <!-- alert(`Error: ${data.error}`); -->
+                return;  <!-- return; -->
+            }  <!-- } -->
+  <!-- blank line -->
+            // Populate modal with connection data  <!-- // Populate modal with connection data -->
+            const tableBody = document.getElementById('connection-table-body');  <!-- const tableBody = document.getElementById('connection-table-body'); -->
+            tableBody.innerHTML = '';  <!-- tableBody.innerHTML = ''; -->
+  <!-- blank line -->
+            if (data.connections.length === 0) {  <!-- if (data.connections.length === 0) { -->
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">No connections found</td></tr>';  <!-- tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">No connections found</td></tr>'; -->
+            } else {  <!-- } else { -->
+                data.connections.forEach(conn => {  <!-- data.connections.forEach(conn => { -->
+                    const row = document.createElement('tr');  <!-- const row = document.createElement('tr'); -->
+                    row.innerHTML = `  <!-- row.innerHTML = ` -->
+                        <td>${conn.protocol}</td>  <!-- <td>${conn.protocol}</td> -->
+                        <td>${conn.local_address}</td>  <!-- <td>${conn.local_address}</td> -->
+                        <td>${conn.remote_address}</td>  <!-- <td>${conn.remote_address}</td> -->
+                        <td><span class="status-badge status-${conn.status.toLowerCase()}">${conn.status}</span></td>  <!-- <td><span class="status-badge status-${conn.status.toLowerCase()}">${conn.status}</span></td> -->
+                        <td>${conn.pid}</td>  <!-- <td>${conn.pid}</td> -->
+                        <td>${conn.process}</td>  <!-- <td>${conn.process}</td> -->
+                    `;  <!-- `; -->
+                    tableBody.appendChild(row);  <!-- tableBody.appendChild(row); -->
+                });  <!-- }); -->
+            }  <!-- } -->
+  <!-- blank line -->
+            // Update modal title  <!-- // Update modal title -->
+            const modalTitle = document.getElementById('connection-modal-title');  <!-- const modalTitle = document.getElementById('connection-modal-title'); -->
+            modalTitle.textContent = status === 'all'  <!-- modalTitle.textContent = status === 'all' -->
+                ? `All Network Connections (${data.count})`  <!-- ? `All Network Connections (${data.count})` -->
+                : `Established Connections (${data.count})`;  <!-- : `Established Connections (${data.count})`; -->
+  <!-- blank line -->
+            // Show modal  <!-- // Show modal -->
+            document.getElementById('connection-modal').style.display = 'flex';  <!-- document.getElementById('connection-modal').style.display = 'flex'; -->
+        } catch (error) {  <!-- } catch (error) { -->
+            console.error('Error fetching connection details:', error);  <!-- console.error('Error fetching connection details:', error); -->
+            alert('Failed to fetch connection details');  <!-- alert('Failed to fetch connection details'); -->
+        }  <!-- } -->
+    }  <!-- } -->
+  <!-- blank line -->
+    function closeConnectionModal() {  <!-- function closeConnectionModal() { -->
+        document.getElementById('connection-modal').style.display = 'none';  <!-- document.getElementById('connection-modal').style.display = 'none'; -->
+    }  <!-- } -->
+  <!-- blank line -->
+    // Close modal when clicking outside  <!-- // Close modal when clicking outside -->
+    document.addEventListener('DOMContentLoaded', function () {  <!-- document.addEventListener('DOMContentLoaded', function () { -->
+        const modal = document.getElementById('connection-modal');  <!-- const modal = document.getElementById('connection-modal'); -->
+        if (modal) {  <!-- if (modal) { -->
+            modal.addEventListener('click', function (e) {  <!-- modal.addEventListener('click', function (e) { -->
+                if (e.target === modal) {  <!-- if (e.target === modal) { -->
+                    closeConnectionModal();  <!-- closeConnectionModal(); -->
+                }  <!-- } -->
+            });  <!-- }); -->
+        }  <!-- } -->
+    });  <!-- }); -->
+  <!-- blank line -->
 </script>  <!-- </script> -->
 {% endblock %}  <!-- {% endblock %} -->

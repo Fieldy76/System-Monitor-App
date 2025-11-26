@@ -30,7 +30,15 @@ A comprehensive, production-ready system monitoring web application built with F
 - **Memory Tracking**: Monitor RAM usage with total, used, and available statistics
 - **Disk Usage**: View usage statistics for all mounted partitions
 - **Disk I/O**: Track read/write operations and data transfer rates
-- **Network Monitoring**: Bandwidth usage, packet counts, active connections, and real-time traffic graph
+- **Network Monitoring**: 
+  - Bandwidth usage and packet counts
+  - Active connections with real-time traffic graph
+  - **Interactive Connection Details**: Click on Connections or Established values to view detailed network connection information including:
+    - Protocol (TCP/UDP)
+    - Local and remote addresses with ports
+    - Connection status with color-coded badges
+    - Process ID and process name
+    - Filterable views (all connections or established only)
 - **Live Updates**: Configurable refresh intervals (1s, 2s, 5s, 10s, 30s)
 
 ### 📊 Historical Data & Analytics
@@ -126,6 +134,7 @@ A comprehensive, production-ready system monitoring web application built with F
 - **Dark Theme**: Eye-friendly with glassmorphism effects
 - **Sidebar Navigation**: Easy access to all features
 - **Interactive Charts**: Chart.js visualizations
+- **Interactive Network Connections**: Click connections to view detailed information in modal popups
 - **Flash Messages**: User feedback with animations
 - **Smooth Animations**: Micro-interactions for enhanced UX
 - **Drag-and-Drop Dashboard**: Customizable widget layout using Gridstack.js
@@ -427,6 +436,29 @@ Get real-time system metrics.
     "time_wait": 8,
     "total": 65
   }
+}
+```
+
+#### GET `/api/network/connections?status=ESTABLISHED`
+Get detailed network connection information.
+
+**Query Parameters**:
+- `status` (optional): Filter by connection status (e.g., ESTABLISHED, LISTEN, TIME_WAIT)
+
+**Response**:
+```json
+{
+  "connections": [
+    {
+      "protocol": "TCP",
+      "local_address": "192.168.1.100:5000",
+      "remote_address": "93.184.216.34:443",
+      "status": "ESTABLISHED",
+      "pid": 1234,
+      "process": "chrome"
+    }
+  ],
+  "count": 24
 }
 ```
 

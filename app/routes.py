@@ -204,6 +204,60 @@ def fetch_remote_metrics(server):
         return jsonify({'error': 'Failed to fetch metrics from remote server'}), 500
 
 
+@main.route('/api/network/connections')
+@login_required
+def network_connections():
+    """API endpoint to get detailed network connection information."""
+    status_filter = request.args.get('status')
+    
+    try:
+        connections = psutil.net_connections(kind='inet')
+        
+        # Filter by status if specified
+        if status_filter:
+            connections = [c for c in connections if c.status == status_filter.upper()]
+        
+        connection_list = []
+        for conn in connections:
+            # Get process information if available
+            process_name = None
+            try:
+                if conn.pid:
+                    proc = psutil.Process(conn.pid)
+                    process_name = proc.name()
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+            
+            # Format connection data
+            conn_data = {
+                'protocol': 'TCP' if conn.type == 1 else 'UDP',
+                'local_address': f"{conn.laddr.ip}:{conn.laddr.port}" if conn.laddr else 'N/A',
+                'remote_address': f"{conn.raddr.ip}:{conn.raddr.port}" if conn.raddr else 'N/A',
+                'status': conn.status,
+                'pid': conn.pid if conn.pid else 'N/A',
+                'process': process_name if process_name else 'N/A'
+            }
+            connection_list.append(conn_data)
+        
+        return jsonify({
+            'connections': connection_list,
+            'count': len(connection_list)
+        })
+    except PermissionError:
+        return jsonify({
+            'error': 'Permission denied. Root/admin privileges may be required.',
+            'connections': [],
+            'count': 0
+        }), 403
+    except Exception as e:
+        current_app.logger.error(f"Error fetching network connections: {e}")
+        return jsonify({
+            'error': str(e),
+            'connections': [],
+            'count': 0
+        }), 500
+
+
 # ============================================================================
 # HISTORICAL DATA API
 # ============================================================================

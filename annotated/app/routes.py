@@ -3,7 +3,7 @@ import psutil  # import psutil
 import requests  # import requests
 from flask import Blueprint, jsonify, render_template, request, current_app  # from flask import Blueprint, jsonify, render_template, request, current_app
 from flask_login import login_required, current_user  # from flask_login import login_required, current_user
-from datetime import datetime, timedelta  # from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone  # from datetime import datetime, timedelta, timezone
 from app.models import (db, Server, SystemMetric, NetworkMetric, ProcessSnapshot,  # from app.models import (db, Server, SystemMetric, NetworkMetric, ProcessSnapshot,
                          AlertRule, AlertHistory, UserPreference)  # AlertRule, AlertHistory, UserPreference)
 from app.export import export_metrics_to_csv, export_metrics_to_json, create_export_response  # from app.export import export_metrics_to_csv, export_metrics_to_json, create_export_response
@@ -151,6 +151,8 @@ def metrics():  # def metrics():
     network_info = {  # network_info = {
         'bytes_sent': get_size(net_io.bytes_sent),  # 'bytes_sent': get_size(net_io.bytes_sent),
         'bytes_recv': get_size(net_io.bytes_recv),  # 'bytes_recv': get_size(net_io.bytes_recv),
+        'bytes_sent_raw': net_io.bytes_sent,  # 'bytes_sent_raw': net_io.bytes_sent,
+        'bytes_recv_raw': net_io.bytes_recv,  # 'bytes_recv_raw': net_io.bytes_recv,
         'packets_sent': net_io.packets_sent,  # 'packets_sent': net_io.packets_sent,
         'packets_recv': net_io.packets_recv  # 'packets_recv': net_io.packets_recv
     }  # }
@@ -193,13 +195,67 @@ def fetch_remote_metrics(server):  # def fetch_remote_metrics(server):
         response.raise_for_status()  # response.raise_for_status()
           # blank line
         # Update last_seen  # # Update last_seen
-        server.last_seen = datetime.utcnow()  # server.last_seen = datetime.utcnow()
+        server.last_seen = datetime.now(timezone.utc)  # server.last_seen = datetime.now(timezone.utc)
         db.session.commit()  # db.session.commit()
           # blank line
         return jsonify(response.json())  # return jsonify(response.json())
     except Exception as e:  # except Exception as e:
         current_app.logger.error(f"Error fetching metrics from {server.name}: {e}")  # current_app.logger.error(f"Error fetching metrics from {server.name}: {e}")
         return jsonify({'error': 'Failed to fetch metrics from remote server'}), 500  # return jsonify({'error': 'Failed to fetch metrics from remote server'}), 500
+  # blank line
+  # blank line
+@main.route('/api/network/connections')  # @main.route('/api/network/connections')
+@login_required  # @login_required
+def network_connections():  # def network_connections():
+    """API endpoint to get detailed network connection information."""  # """API endpoint to get detailed network connection information."""
+    status_filter = request.args.get('status')  # status_filter = request.args.get('status')
+      # blank line
+    try:  # try:
+        connections = psutil.net_connections(kind='inet')  # connections = psutil.net_connections(kind='inet')
+          # blank line
+        # Filter by status if specified  # # Filter by status if specified
+        if status_filter:  # if status_filter:
+            connections = [c for c in connections if c.status == status_filter.upper()]  # connections = [c for c in connections if c.status == status_filter.upper()]
+          # blank line
+        connection_list = []  # connection_list = []
+        for conn in connections:  # for conn in connections:
+            # Get process information if available  # # Get process information if available
+            process_name = None  # process_name = None
+            try:  # try:
+                if conn.pid:  # if conn.pid:
+                    proc = psutil.Process(conn.pid)  # proc = psutil.Process(conn.pid)
+                    process_name = proc.name()  # process_name = proc.name()
+            except (psutil.NoSuchProcess, psutil.AccessDenied):  # except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass  # pass
+              # blank line
+            # Format connection data  # # Format connection data
+            conn_data = {  # conn_data = {
+                'protocol': 'TCP' if conn.type == 1 else 'UDP',  # 'protocol': 'TCP' if conn.type == 1 else 'UDP',
+                'local_address': f"{conn.laddr.ip}:{conn.laddr.port}" if conn.laddr else 'N/A',  # 'local_address': f"{conn.laddr.ip}:{conn.laddr.port}" if conn.laddr else 'N/A',
+                'remote_address': f"{conn.raddr.ip}:{conn.raddr.port}" if conn.raddr else 'N/A',  # 'remote_address': f"{conn.raddr.ip}:{conn.raddr.port}" if conn.raddr else 'N/A',
+                'status': conn.status,  # 'status': conn.status,
+                'pid': conn.pid if conn.pid else 'N/A',  # 'pid': conn.pid if conn.pid else 'N/A',
+                'process': process_name if process_name else 'N/A'  # 'process': process_name if process_name else 'N/A'
+            }  # }
+            connection_list.append(conn_data)  # connection_list.append(conn_data)
+          # blank line
+        return jsonify({  # return jsonify({
+            'connections': connection_list,  # 'connections': connection_list,
+            'count': len(connection_list)  # 'count': len(connection_list)
+        })  # })
+    except PermissionError:  # except PermissionError:
+        return jsonify({  # return jsonify({
+            'error': 'Permission denied. Root/admin privileges may be required.',  # 'error': 'Permission denied. Root/admin privileges may be required.',
+            'connections': [],  # 'connections': [],
+            'count': 0  # 'count': 0
+        }), 403  # }), 403
+    except Exception as e:  # except Exception as e:
+        current_app.logger.error(f"Error fetching network connections: {e}")  # current_app.logger.error(f"Error fetching network connections: {e}")
+        return jsonify({  # return jsonify({
+            'error': str(e),  # 'error': str(e),
+            'connections': [],  # 'connections': [],
+            'count': 0  # 'count': 0
+        }), 500  # }), 500
   # blank line
   # blank line
 # ============================================================================  # # ============================================================================
@@ -221,7 +277,7 @@ def metrics_history():  # def metrics_history():
     if not server_id:  # if not server_id:
         return jsonify({'error': 'Server not found'}), 404  # return jsonify({'error': 'Server not found'}), 404
       # blank line
-    start_time = datetime.utcnow() - timedelta(hours=hours)  # start_time = datetime.utcnow() - timedelta(hours=hours)
+    start_time = datetime.now(timezone.utc) - timedelta(hours=hours)  # start_time = datetime.now(timezone.utc) - timedelta(hours=hours)
       # blank line
     if metric_type == 'system':  # if metric_type == 'system':
         metrics = SystemMetric.query.filter(  # metrics = SystemMetric.query.filter(
@@ -554,7 +610,7 @@ def export_csv():  # def export_csv():
     days = request.args.get('days', default=7, type=int)  # days = request.args.get('days', default=7, type=int)
     metric_types = request.args.getlist('metrics') or ['system', 'network']  # metric_types = request.args.getlist('metrics') or ['system', 'network']
       # blank line
-    end_date = datetime.utcnow()  # end_date = datetime.utcnow()
+    end_date = datetime.now(timezone.utc)  # end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=days)  # start_date = end_date - timedelta(days=days)
       # blank line
     csv_data = export_metrics_to_csv(server_id, start_date, end_date, metric_types)  # csv_data = export_metrics_to_csv(server_id, start_date, end_date, metric_types)
@@ -569,7 +625,7 @@ def export_json():  # def export_json():
     days = request.args.get('days', default=7, type=int)  # days = request.args.get('days', default=7, type=int)
     metric_types = request.args.getlist('metrics') or ['system', 'network']  # metric_types = request.args.getlist('metrics') or ['system', 'network']
       # blank line
-    end_date = datetime.utcnow()  # end_date = datetime.utcnow()
+    end_date = datetime.now(timezone.utc)  # end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=days)  # start_date = end_date - timedelta(days=days)
       # blank line
     json_data = export_metrics_to_json(server_id, start_date, end_date, metric_types)  # json_data = export_metrics_to_json(server_id, start_date, end_date, metric_types)
@@ -659,7 +715,7 @@ def update_health_service(service_id):  # def update_health_service(service_id):
     if 'is_active' in data:  # if 'is_active' in data:
         service.is_active = data['is_active']  # service.is_active = data['is_active']
       # blank line
-    service.updated_at = datetime.utcnow()  # service.updated_at = datetime.utcnow()
+    service.updated_at = datetime.now(timezone.utc)  # service.updated_at = datetime.now(timezone.utc)
     db.session.commit()  # db.session.commit()
       # blank line
     return jsonify({  # return jsonify({
