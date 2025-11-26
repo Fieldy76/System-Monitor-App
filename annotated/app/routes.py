@@ -258,6 +258,143 @@ def network_connections():  # def network_connections():
         }), 500  # }), 500
   # blank line
   # blank line
+@main.route('/api/disk/io-processes')  # @main.route('/api/disk/io-processes')
+@login_required  # @login_required
+def disk_io_processes():  # def disk_io_processes():
+    """API endpoint to get processes sorted by I/O activity."""  # """API endpoint to get processes sorted by I/O activity."""
+    try:  # try:
+        processes = []  # processes = []
+        for proc in psutil.process_iter(['pid', 'name']):  # for proc in psutil.process_iter(['pid', 'name']):
+            try:  # try:
+                # Get I/O counters for each process  # # Get I/O counters for each process
+                io_counters = proc.io_counters()  # io_counters = proc.io_counters()
+                processes.append({  # processes.append({
+                    'pid': proc.info['pid'],  # 'pid': proc.info['pid'],
+                    'name': proc.info['name'],  # 'name': proc.info['name'],
+                    'read_bytes': io_counters.read_bytes,  # 'read_bytes': io_counters.read_bytes,
+                    'write_bytes': io_counters.write_bytes,  # 'write_bytes': io_counters.write_bytes,
+                    'read_count': io_counters.read_count,  # 'read_count': io_counters.read_count,
+                    'write_count': io_counters.write_count,  # 'write_count': io_counters.write_count,
+                    'total_bytes': io_counters.read_bytes + io_counters.write_bytes  # 'total_bytes': io_counters.read_bytes + io_counters.write_bytes
+                })  # })
+            except (psutil.NoSuchProcess, psutil.AccessDenied, AttributeError):  # except (psutil.NoSuchProcess, psutil.AccessDenied, AttributeError):
+                continue  # continue
+          # blank line
+        # Sort by total I/O (descending)  # # Sort by total I/O (descending)
+        processes.sort(key=lambda x: x['total_bytes'], reverse=True)  # processes.sort(key=lambda x: x['total_bytes'], reverse=True)
+          # blank line
+        # Take top 50 processes  # # Take top 50 processes
+        top_processes = processes[:50]  # top_processes = processes[:50]
+          # blank line
+        # Format bytes for display  # # Format bytes for display
+        for proc in top_processes:  # for proc in top_processes:
+            proc['read_bytes_formatted'] = get_size(proc['read_bytes'])  # proc['read_bytes_formatted'] = get_size(proc['read_bytes'])
+            proc['write_bytes_formatted'] = get_size(proc['write_bytes'])  # proc['write_bytes_formatted'] = get_size(proc['write_bytes'])
+          # blank line
+        return jsonify({  # return jsonify({
+            'processes': top_processes,  # 'processes': top_processes,
+            'count': len(top_processes)  # 'count': len(top_processes)
+        })  # })
+    except Exception as e:  # except Exception as e:
+        current_app.logger.error(f"Error fetching I/O processes: {e}")  # current_app.logger.error(f"Error fetching I/O processes: {e}")
+        return jsonify({  # return jsonify({
+            'error': str(e),  # 'error': str(e),
+            'processes': [],  # 'processes': [],
+            'count': 0  # 'count': 0
+        }), 500  # }), 500
+  # blank line
+  # blank line
+@main.route('/api/disk/analyze')  # @main.route('/api/disk/analyze')
+@login_required  # @login_required
+def disk_analyze():  # def disk_analyze():
+    """API endpoint to analyze disk space usage for a mountpoint."""  # """API endpoint to analyze disk space usage for a mountpoint."""
+    mountpoint = request.args.get('mountpoint', '/')  # mountpoint = request.args.get('mountpoint', '/')
+      # blank line
+    try:  # try:
+        import os  # import os
+        from pathlib import Path  # from pathlib import Path
+          # blank line
+        # Safety check - only allow actual mountpoints  # # Safety check - only allow actual mountpoints
+        partitions = psutil.disk_partitions()  # partitions = psutil.disk_partitions()
+        valid_mountpoints = [p.mountpoint for p in partitions]  # valid_mountpoints = [p.mountpoint for p in partitions]
+          # blank line
+        if mountpoint not in valid_mountpoints:  # if mountpoint not in valid_mountpoints:
+            return jsonify({'error': 'Invalid mountpoint'}), 400  # return jsonify({'error': 'Invalid mountpoint'}), 400
+          # blank line
+        # Directories to skip for safety and performance  # # Directories to skip for safety and performance
+        skip_dirs = {'proc', 'sys', 'dev', 'run', 'tmp', 'snap', '.snapshots'}  # skip_dirs = {'proc', 'sys', 'dev', 'run', 'tmp', 'snap', '.snapshots'}
+          # blank line
+        directory_sizes = {}  # directory_sizes = {}
+          # blank line
+        # Scan directories (limited depth)  # # Scan directories (limited depth)
+        base_path = Path(mountpoint)  # base_path = Path(mountpoint)
+        for item in base_path.iterdir():  # for item in base_path.iterdir():
+            if item.name in skip_dirs or item.name.startswith('.'):  # if item.name in skip_dirs or item.name.startswith('.'):
+                continue  # continue
+              # blank line
+            if item.is_dir():  # if item.is_dir():
+                try:  # try:
+                    # Calculate directory size (with depth limit)  # # Calculate directory size (with depth limit)
+                    total_size = 0  # total_size = 0
+                    file_count = 0  # file_count = 0
+                      # blank line
+                    for dirpath, dirnames, filenames in os.walk(item, topdown=True):  # for dirpath, dirnames, filenames in os.walk(item, topdown=True):
+                        # Limit depth to 3 levels  # # Limit depth to 3 levels
+                        depth = dirpath[len(str(item)):].count(os.sep)  # depth = dirpath[len(str(item)):].count(os.sep)
+                        if depth > 2:  # if depth > 2:
+                            dirnames[:] = []  # Don't recurse deeper  # dirnames[:] = []  # Don't recurse deeper
+                            continue  # continue
+                          # blank line
+                        # Skip hidden and system directories  # # Skip hidden and system directories
+                        dirnames[:] = [d for d in dirnames if not d.startswith('.') and d not in skip_dirs]  # dirnames[:] = [d for d in dirnames if not d.startswith('.') and d not in skip_dirs]
+                          # blank line
+                        for filename in filenames:  # for filename in filenames:
+                            try:  # try:
+                                filepath = os.path.join(dirpath, filename)  # filepath = os.path.join(dirpath, filename)
+                                if not os.path.islink(filepath):  # if not os.path.islink(filepath):
+                                    total_size += os.path.getsize(filepath)  # total_size += os.path.getsize(filepath)
+                                    file_count += 1  # file_count += 1
+                            except (OSError, PermissionError):  # except (OSError, PermissionError):
+                                continue  # continue
+                          # blank line
+                        # Limit processing to prevent timeout  # # Limit processing to prevent timeout
+                        if file_count > 100000:  # if file_count > 100000:
+                            break  # break
+                      # blank line
+                    if total_size > 0:  # if total_size > 0:
+                        directory_sizes[str(item)] = {  # directory_sizes[str(item)] = {
+                            'size': total_size,  # 'size': total_size,
+                            'size_formatted': get_size(total_size),  # 'size_formatted': get_size(total_size),
+                            'file_count': file_count  # 'file_count': file_count
+                        }  # }
+                except (PermissionError, OSError):  # except (PermissionError, OSError):
+                    continue  # continue
+          # blank line
+        # Sort by size and get top 10  # # Sort by size and get top 10
+        sorted_dirs = sorted(directory_sizes.items(), key=lambda x: x[1]['size'], reverse=True)[:10]  # sorted_dirs = sorted(directory_sizes.items(), key=lambda x: x[1]['size'], reverse=True)[:10]
+          # blank line
+        result = [{  # result = [{
+            'path': path,  # 'path': path,
+            'size': info['size'],  # 'size': info['size'],
+            'size_formatted': info['size_formatted'],  # 'size_formatted': info['size_formatted'],
+            'file_count': info['file_count']  # 'file_count': info['file_count']
+        } for path, info in sorted_dirs]  # } for path, info in sorted_dirs]
+          # blank line
+        return jsonify({  # return jsonify({
+            'directories': result,  # 'directories': result,
+            'mountpoint': mountpoint,  # 'mountpoint': mountpoint,
+            'count': len(result)  # 'count': len(result)
+        })  # })
+          # blank line
+    except Exception as e:  # except Exception as e:
+        current_app.logger.error(f"Error analyzing disk {mountpoint}: {e}")  # current_app.logger.error(f"Error analyzing disk {mountpoint}: {e}")
+        return jsonify({  # return jsonify({
+            'error': str(e),  # 'error': str(e),
+            'directories': [],  # 'directories': [],
+            'count': 0  # 'count': 0
+        }), 500  # }), 500
+  # blank line
+  # blank line
 # ============================================================================  # # ============================================================================
 # HISTORICAL DATA API  # # HISTORICAL DATA API
 # ============================================================================  # # ============================================================================

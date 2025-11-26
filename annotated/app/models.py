@@ -1,5 +1,5 @@
 """Database models for system monitoring application."""  # """Database models for system monitoring application."""
-from datetime import datetime  # from datetime import datetime
+from datetime import datetime, timezone  # from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy  # from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin  # from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash  # from werkzeug.security import generate_password_hash, check_password_hash
@@ -17,7 +17,7 @@ class User(UserMixin, db.Model):  # class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)  # email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)  # password_hash = db.Column(db.String(255), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)  # is_admin = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))  # created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     last_login = db.Column(db.DateTime)  # last_login = db.Column(db.DateTime)
       # blank line
     # Relationships  # # Relationships
@@ -47,7 +47,7 @@ class Server(db.Model):  # class Server(db.Model):
     is_active = db.Column(db.Boolean, default=True)  # is_active = db.Column(db.Boolean, default=True)
     is_local = db.Column(db.Boolean, default=False)  # True for the local server  # is_local = db.Column(db.Boolean, default=False)  # True for the local server
     last_seen = db.Column(db.DateTime)  # last_seen = db.Column(db.DateTime)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))  # created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
       # blank line
     # Relationships  # # Relationships
     system_metrics = db.relationship('SystemMetric', backref='server', cascade='all, delete-orphan')  # system_metrics = db.relationship('SystemMetric', backref='server', cascade='all, delete-orphan')
@@ -64,7 +64,7 @@ class SystemMetric(db.Model):  # class SystemMetric(db.Model):
       # blank line
     id = db.Column(db.Integer, primary_key=True)  # id = db.Column(db.Integer, primary_key=True)
     server_id = db.Column(db.Integer, db.ForeignKey('servers.id'), nullable=False, index=True)  # server_id = db.Column(db.Integer, db.ForeignKey('servers.id'), nullable=False, index=True)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)  # timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)  # timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
       # blank line
     # CPU metrics  # # CPU metrics
     cpu_percent = db.Column(db.Float, nullable=False)  # cpu_percent = db.Column(db.Float, nullable=False)
@@ -97,7 +97,7 @@ class NetworkMetric(db.Model):  # class NetworkMetric(db.Model):
       # blank line
     id = db.Column(db.Integer, primary_key=True)  # id = db.Column(db.Integer, primary_key=True)
     server_id = db.Column(db.Integer, db.ForeignKey('servers.id'), nullable=False, index=True)  # server_id = db.Column(db.Integer, db.ForeignKey('servers.id'), nullable=False, index=True)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)  # timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)  # timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
       # blank line
     # Network I/O  # # Network I/O
     bytes_sent = db.Column(db.BigInteger, nullable=False)  # bytes_sent = db.Column(db.BigInteger, nullable=False)
@@ -120,7 +120,7 @@ class ProcessSnapshot(db.Model):  # class ProcessSnapshot(db.Model):
       # blank line
     id = db.Column(db.Integer, primary_key=True)  # id = db.Column(db.Integer, primary_key=True)
     server_id = db.Column(db.Integer, db.ForeignKey('servers.id'), nullable=False, index=True)  # server_id = db.Column(db.Integer, db.ForeignKey('servers.id'), nullable=False, index=True)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)  # timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)  # timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
       # blank line
     pid = db.Column(db.Integer, nullable=False)  # pid = db.Column(db.Integer, nullable=False)
     name = db.Column(db.String(255), nullable=False)  # name = db.Column(db.String(255), nullable=False)
@@ -155,8 +155,8 @@ class AlertRule(db.Model):  # class AlertRule(db.Model):
     phone_number = db.Column(db.String(20))  # For SMS  # phone_number = db.Column(db.String(20))  # For SMS
       # blank line
     is_active = db.Column(db.Boolean, default=True)  # is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))  # created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))  # updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
       # blank line
     # Relationships  # # Relationships
     alert_history = db.relationship('AlertHistory', backref='rule', cascade='all, delete-orphan')  # alert_history = db.relationship('AlertHistory', backref='rule', cascade='all, delete-orphan')
@@ -175,7 +175,7 @@ class AlertHistory(db.Model):  # class AlertHistory(db.Model):
     rule_id = db.Column(db.Integer, db.ForeignKey('alert_rules.id'), nullable=False, index=True)  # rule_id = db.Column(db.Integer, db.ForeignKey('alert_rules.id'), nullable=False, index=True)
     server_id = db.Column(db.Integer, db.ForeignKey('servers.id'), nullable=False)  # server_id = db.Column(db.Integer, db.ForeignKey('servers.id'), nullable=False)
       # blank line
-    triggered_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)  # triggered_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    triggered_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)  # triggered_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     metric_value = db.Column(db.Float, nullable=False)  # metric_value = db.Column(db.Float, nullable=False)
     message = db.Column(db.Text)  # message = db.Column(db.Text)
       # blank line
@@ -209,7 +209,7 @@ class UserPreference(db.Model):  # class UserPreference(db.Model):
     email_notifications = db.Column(db.Boolean, default=True)  # email_notifications = db.Column(db.Boolean, default=True)
     sms_notifications = db.Column(db.Boolean, default=False)  # sms_notifications = db.Column(db.Boolean, default=False)
       # blank line
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))  # updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
       # blank line
     def __repr__(self):  # def __repr__(self):
         return f'<UserPreference user={self.user_id}>'  # return f'<UserPreference user={self.user_id}>'
@@ -246,8 +246,8 @@ class ServiceHealth(db.Model):  # class ServiceHealth(db.Model):
     error_message = db.Column(db.Text)  # error_message = db.Column(db.Text)
       # blank line
     # Metadata  # # Metadata
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))  # created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))  # updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))  # created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
       # blank line
     def __repr__(self):  # def __repr__(self):
@@ -281,8 +281,8 @@ class DashboardLayout(db.Model):  # class DashboardLayout(db.Model):
     name = db.Column(db.String(100), default='Default Layout')  # name = db.Column(db.String(100), default='Default Layout')
     layout_config = db.Column(db.JSON)  # Stores widget positions and sizes  # layout_config = db.Column(db.JSON)  # Stores widget positions and sizes
     is_active = db.Column(db.Boolean, default=True)  # is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))  # created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))  # updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
       # blank line
     # Relationship  # # Relationship
     user = db.relationship('User', backref=db.backref('dashboard_layouts', lazy=True))  # user = db.relationship('User', backref=db.backref('dashboard_layouts', lazy=True))

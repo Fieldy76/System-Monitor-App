@@ -100,6 +100,57 @@
         </div>
     </div>
 
+    <!-- Disk I/O Process Modal -->
+    <div id="io-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="io-modal-title">Disk I/O Processes</h3>
+                <span class="modal-close" onclick="closeIOModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="connection-table">
+                        <thead>
+                            <tr>
+                                <th>Process</th>
+                                <th>PID</th>
+                                <th>Read Bytes</th>
+                                <th>Write Bytes</th>
+                                <th>Read Ops</th>
+                                <th>Write Ops</th>
+                            </tr>
+                        </thead>
+                        <tbody id="io-table-body">
+                            <!-- Process rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Disk Analysis Modal -->
+    <div id="disk-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="disk-modal-title">Disk Analysis</h3>
+                <span class="modal-close" onclick="closeDiskModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="disk-loading" style="text-align: center; padding: 2rem; display: none;">
+                    <div class="spinner"></div>
+                    <p>Analyzing disk usage... This may take a moment.</p>
+                </div>
+                <div id="disk-analysis-content">
+                    <h4 style="margin-bottom: 1rem; color: var(--text-secondary);">Top Directories</h4>
+                    <div id="directory-list" class="directory-list">
+                        <!-- Directory items will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <div id="config-data" data-refresh-interval="{{ preferences.refresh_interval if preferences else 2000 }}"
@@ -377,7 +428,9 @@
                 diskList.innerHTML = '';
                 data.disk.forEach(disk => {
                     const diskItem = document.createElement('div');
-                    diskItem.className = 'disk-item';
+                    diskItem.className = 'disk-item clickable-disk-item';
+                    diskItem.onclick = () => showDiskAnalysis(disk.mountpoint);
+                    diskItem.title = 'Click to analyze disk space usage';
                     diskItem.innerHTML = `
                         <div class="disk-header">
                             <span><strong>${disk.device}</strong> (${disk.mountpoint})</span>
@@ -472,16 +525,119 @@
     }
 
     // Close modal when clicking outside
-    document.addEventListener('DOMContentLoaded', function () {
+    window.onclick = function (event) {
         const modal = document.getElementById('connection-modal');
-        if (modal) {
-            modal.addEventListener('click', function (e) {
-                if (e.target === modal) {
-                    closeConnectionModal();
-                }
-            });
+        if (event.target == modal) {
+            closeConnectionModal();
         }
-    });
+        const ioModal = document.getElementById('io-modal');
+        if (event.target == ioModal) {
+            closeIOModal();
+        }
+        const diskModal = document.getElementById('disk-modal');
+        if (event.target == diskModal) {
+            closeDiskModal();
+        }
+    }
+
+    // Disk I/O Process Details
+    async function showIOProcessDetails() {
+        const modal = document.getElementById('io-modal');
+        const tbody = document.getElementById('io-table-body');
+
+        // Show modal immediately
+        modal.style.display = 'block';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Loading...</td></tr>';
+
+        try {
+            const response = await fetch('/api/disk/io-processes');
+            const data = await response.json();
+
+            tbody.innerHTML = '';
+
+            if (data.processes && data.processes.length > 0) {
+                data.processes.forEach(proc => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><span class="process-name">${proc.name}</span></td>
+                        <td>${proc.pid}</td>
+                        <td>${proc.read_bytes_formatted}</td>
+                        <td>${proc.write_bytes_formatted}</td>
+                        <td>${proc.read_count}</td>
+                        <td>${proc.write_count}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No active I/O processes found</td></tr>';
+            }
+        } catch (error) {
+            console.error('Error fetching I/O details:', error);
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--danger);">Error loading data</td></tr>';
+        }
+    }
+
+    function closeIOModal() {
+        document.getElementById('io-modal').style.display = 'none';
+    }
+
+    // Disk Analysis
+    async function showDiskAnalysis(mountpoint) {
+        const modal = document.getElementById('disk-modal');
+        const loading = document.getElementById('disk-loading');
+        const content = document.getElementById('disk-analysis-content');
+        const list = document.getElementById('directory-list');
+        const title = document.getElementById('disk-modal-title');
+
+        title.textContent = `Disk Analysis: ${mountpoint}`;
+        modal.style.display = 'block';
+        loading.style.display = 'block';
+        content.style.display = 'none';
+        list.innerHTML = '';
+
+        try {
+            const response = await fetch(`/api/disk/analyze?mountpoint=${encodeURIComponent(mountpoint)}`);
+            const data = await response.json();
+
+            loading.style.display = 'none';
+            content.style.display = 'block';
+
+            if (data.directories && data.directories.length > 0) {
+                // Find max size for progress bars
+                const maxSize = data.directories[0].size;
+
+                data.directories.forEach(dir => {
+                    const percent = (dir.size / maxSize) * 100;
+                    const item = document.createElement('div');
+                    item.className = 'directory-item';
+                    item.innerHTML = `
+                        <div class="directory-info">
+                            <span class="directory-path" title="${dir.path}">${dir.path}</span>
+                            <span class="directory-size">${dir.size_formatted}</span>
+                        </div>
+                        <div class="directory-bar-bg">
+                            <div class="directory-bar-fill" style="width: ${percent}%"></div>
+                        </div>
+                        <div class="directory-meta">
+                            ${dir.file_count.toLocaleString()} files
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+            } else {
+                list.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No directories found or permission denied</p>';
+            }
+        } catch (error) {
+            console.error('Error analyzing disk:', error);
+            loading.style.display = 'none';
+            content.style.display = 'block';
+            list.innerHTML = '<p style="text-align: center; color: var(--danger);">Error analyzing disk usage</p>';
+        }
+    }
+
+    function closeDiskModal() {
+        document.getElementById('disk-modal').style.display = 'none';
+    }
 
 </script>
 {% endblock %}
