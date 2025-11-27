@@ -1,5 +1,6 @@
 {% macro cpu_widget(widget_id='cpu-widget') %}
-<div class="card cpu-card widget" data-widget-id="{{ widget_id }}" data-widget-type="cpu">
+<div class="card cpu-card widget clickable-widget" data-widget-id="{{ widget_id }}" data-widget-type="cpu"
+    onclick="showCPUDetails()">
     <h2>CPU</h2>
     <div class="metric-large">
         <span id="{{ widget_id }}-percent">0</span><span class="unit">%</span>

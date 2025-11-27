@@ -1,643 +1,968 @@
-{% extends "base.html" %}  <!-- {% extends "base.html" %} -->
-{% from 'macros/cpu_widget.html' import cpu_widget %}  <!-- {% from 'macros/cpu_widget.html' import cpu_widget %} -->
-{% from 'macros/memory_widget.html' import memory_widget %}  <!-- {% from 'macros/memory_widget.html' import memory_widget %} -->
-{% from 'macros/network_widget.html' import network_widget %}  <!-- {% from 'macros/network_widget.html' import network_widget %} -->
-{% from 'macros/disk_widget.html' import disk_widget %}  <!-- {% from 'macros/disk_widget.html' import disk_widget %} -->
-{% from 'macros/io_widget.html' import io_widget %}  <!-- {% from 'macros/io_widget.html' import io_widget %} -->
-  <!-- blank line -->
-{% block title %}Dashboard - System Monitor{% endblock %}  <!-- {% block title %}Dashboard - System Monitor{% endblock %} -->
-  <!-- blank line -->
-{% block extra_css %}  <!-- {% block extra_css %} -->
-<link href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" rel="stylesheet" />  <!-- <link href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" rel="stylesheet" /> -->
-<style>  <!-- <style> -->
-    .grid-stack {  <!-- .grid-stack { -->
-        background: rgba(255, 255, 255, 0.02);  <!-- background: rgba(255, 255, 255, 0.02); -->
-        border-radius: 1rem;  <!-- border-radius: 1rem; -->
-        min-height: 80vh;  <!-- min-height: 80vh; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .grid-stack-item-content {  <!-- .grid-stack-item-content { -->
-        overflow: hidden !important;  <!-- overflow: hidden !important; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .widget {  <!-- .widget { -->
-        height: 100%;  <!-- height: 100%; -->
-        width: 100%;  <!-- width: 100%; -->
-        display: flex;  <!-- display: flex; -->
-        flex-direction: column;  <!-- flex-direction: column; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .dashboard-actions {  <!-- .dashboard-actions { -->
-        display: flex;  <!-- display: flex; -->
-        gap: 1rem;  <!-- gap: 1rem; -->
-        margin-left: auto;  <!-- margin-left: auto; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .grid-stack-item.ui-draggable-dragging {  <!-- .grid-stack-item.ui-draggable-dragging { -->
-        opacity: 0.8;  <!-- opacity: 0.8; -->
-        z-index: 1000;  <!-- z-index: 1000; -->
-    }  <!-- } -->
-</style>  <!-- </style> -->
-{% endblock %}  <!-- {% endblock %} -->
-  <!-- blank line -->
-{% block content %}  <!-- {% block content %} -->
-<div class="container">  <!-- <div class="container"> -->
-    <header>  <!-- <header> -->
-        <h1>System Monitor Dashboard</h1>  <!-- <h1>System Monitor Dashboard</h1> -->
-        <div style="display: flex; gap: 1rem; align-items: center; width: 100%;">  <!-- <div style="display: flex; gap: 1rem; align-items: center; width: 100%;"> -->
-            {% if servers|length > 1 %}  <!-- {% if servers|length > 1 %} -->
-            <select id="serverSelect"  <!-- <select id="serverSelect" -->
-                style="padding: 0.5rem 1rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);">  <!-- style="padding: 0.5rem 1rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);"> -->
-                {% for server in servers %}  <!-- {% for server in servers %} -->
-                <option value="{{ server.id }}">{{ server.name }}</option>  <!-- <option value="{{ server.id }}">{{ server.name }}</option> -->
-                {% endfor %}  <!-- {% endfor %} -->
-            </select>  <!-- </select> -->
-            {% endif %}  <!-- {% endif %} -->
-  <!-- blank line -->
-            <div class="status-indicator">  <!-- <div class="status-indicator"> -->
-                <span class="dot"></span> Live  <!-- <span class="dot"></span> Live -->
-            </div>  <!-- </div> -->
-  <!-- blank line -->
-            <div class="dashboard-actions">  <!-- <div class="dashboard-actions"> -->
-                <button class="btn btn-secondary btn-sm" onclick="resetLayout()">  <!-- <button class="btn btn-secondary btn-sm" onclick="resetLayout()"> -->
-                    <i class="fas fa-undo"></i> Reset Layout  <!-- <i class="fas fa-undo"></i> Reset Layout -->
-                </button>  <!-- </button> -->
-                <button class="btn btn-primary btn-sm" onclick="saveLayout()">  <!-- <button class="btn btn-primary btn-sm" onclick="saveLayout()"> -->
-                    <i class="fas fa-save"></i> Save Layout  <!-- <i class="fas fa-save"></i> Save Layout -->
-                </button>  <!-- </button> -->
-            </div>  <!-- </div> -->
-        </div>  <!-- </div> -->
-    </header>  <!-- </header> -->
-  <!-- blank line -->
-    <div class="grid-stack">  <!-- <div class="grid-stack"> -->
-        <!-- Widgets will be injected here by Gridstack -->  <!-- <!-- Widgets will be injected here by Gridstack --> -->
-    </div>  <!-- </div> -->
-  <!-- blank line -->
-    <!-- Network Connections Modal -->  <!-- <!-- Network Connections Modal --> -->
-    <div id="connection-modal" class="modal">  <!-- <div id="connection-modal" class="modal"> -->
-        <div class="modal-content">  <!-- <div class="modal-content"> -->
-            <div class="modal-header">  <!-- <div class="modal-header"> -->
-                <h2 id="connection-modal-title">Network Connections</h2>  <!-- <h2 id="connection-modal-title">Network Connections</h2> -->
-                <button class="modal-close" onclick="closeConnectionModal()">&times;</button>  <!-- <button class="modal-close" onclick="closeConnectionModal()">&times;</button> -->
-            </div>  <!-- </div> -->
-            <div class="modal-body">  <!-- <div class="modal-body"> -->
-                <table class="connection-table">  <!-- <table class="connection-table"> -->
-                    <thead>  <!-- <thead> -->
-                        <tr>  <!-- <tr> -->
-                            <th>Protocol</th>  <!-- <th>Protocol</th> -->
-                            <th>Local Address</th>  <!-- <th>Local Address</th> -->
-                            <th>Remote Address</th>  <!-- <th>Remote Address</th> -->
-                            <th>Status</th>  <!-- <th>Status</th> -->
-                            <th>PID</th>  <!-- <th>PID</th> -->
-                            <th>Process</th>  <!-- <th>Process</th> -->
-                        </tr>  <!-- </tr> -->
-                    </thead>  <!-- </thead> -->
-                    <tbody id="connection-table-body">  <!-- <tbody id="connection-table-body"> -->
-                        <!-- Connection rows will be inserted here -->  <!-- <!-- Connection rows will be inserted here --> -->
-                    </tbody>  <!-- </tbody> -->
-                </table>  <!-- </table> -->
-            </div>  <!-- </div> -->
-        </div>  <!-- </div> -->
-    </div>  <!-- </div> -->
-  <!-- blank line -->
-    <!-- Disk I/O Process Modal -->  <!-- <!-- Disk I/O Process Modal --> -->
-    <div id="io-modal" class="modal">  <!-- <div id="io-modal" class="modal"> -->
-        <div class="modal-content">  <!-- <div class="modal-content"> -->
-            <div class="modal-header">  <!-- <div class="modal-header"> -->
-                <h3 id="io-modal-title">Disk I/O Processes</h3>  <!-- <h3 id="io-modal-title">Disk I/O Processes</h3> -->
-                <span class="modal-close" onclick="closeIOModal()">&times;</span>  <!-- <span class="modal-close" onclick="closeIOModal()">&times;</span> -->
-            </div>  <!-- </div> -->
-            <div class="modal-body">  <!-- <div class="modal-body"> -->
-                <div class="table-responsive">  <!-- <div class="table-responsive"> -->
-                    <table class="connection-table">  <!-- <table class="connection-table"> -->
-                        <thead>  <!-- <thead> -->
-                            <tr>  <!-- <tr> -->
-                                <th>Process</th>  <!-- <th>Process</th> -->
-                                <th>PID</th>  <!-- <th>PID</th> -->
-                                <th>Read Bytes</th>  <!-- <th>Read Bytes</th> -->
-                                <th>Write Bytes</th>  <!-- <th>Write Bytes</th> -->
-                                <th>Read Ops</th>  <!-- <th>Read Ops</th> -->
-                                <th>Write Ops</th>  <!-- <th>Write Ops</th> -->
-                            </tr>  <!-- </tr> -->
-                        </thead>  <!-- </thead> -->
-                        <tbody id="io-table-body">  <!-- <tbody id="io-table-body"> -->
-                            <!-- Process rows will be inserted here -->  <!-- <!-- Process rows will be inserted here --> -->
-                        </tbody>  <!-- </tbody> -->
-                    </table>  <!-- </table> -->
-                </div>  <!-- </div> -->
-            </div>  <!-- </div> -->
-        </div>  <!-- </div> -->
-    </div>  <!-- </div> -->
-  <!-- blank line -->
-    <!-- Disk Analysis Modal -->  <!-- <!-- Disk Analysis Modal --> -->
-    <div id="disk-modal" class="modal">  <!-- <div id="disk-modal" class="modal"> -->
-        <div class="modal-content">  <!-- <div class="modal-content"> -->
-            <div class="modal-header">  <!-- <div class="modal-header"> -->
-                <h3 id="disk-modal-title">Disk Analysis</h3>  <!-- <h3 id="disk-modal-title">Disk Analysis</h3> -->
-                <span class="modal-close" onclick="closeDiskModal()">&times;</span>  <!-- <span class="modal-close" onclick="closeDiskModal()">&times;</span> -->
-            </div>  <!-- </div> -->
-            <div class="modal-body">  <!-- <div class="modal-body"> -->
-                <div id="disk-loading" style="text-align: center; padding: 2rem; display: none;">  <!-- <div id="disk-loading" style="text-align: center; padding: 2rem; display: none;"> -->
-                    <div class="spinner"></div>  <!-- <div class="spinner"></div> -->
-                    <p>Analyzing disk usage... This may take a moment.</p>  <!-- <p>Analyzing disk usage... This may take a moment.</p> -->
-                </div>  <!-- </div> -->
-                <div id="disk-analysis-content">  <!-- <div id="disk-analysis-content"> -->
-                    <h4 style="margin-bottom: 1rem; color: var(--text-secondary);">Top Directories</h4>  <!-- <h4 style="margin-bottom: 1rem; color: var(--text-secondary);">Top Directories</h4> -->
-                    <div id="directory-list" class="directory-list">  <!-- <div id="directory-list" class="directory-list"> -->
-                        <!-- Directory items will be inserted here -->  <!-- <!-- Directory items will be inserted here --> -->
-                    </div>  <!-- </div> -->
-                </div>  <!-- </div> -->
-            </div>  <!-- </div> -->
-        </div>  <!-- </div> -->
-    </div>  <!-- </div> -->
-  <!-- blank line -->
-</div>  <!-- </div> -->
-  <!-- blank line -->
-<div id="config-data" data-refresh-interval="{{ preferences.refresh_interval if preferences else 2000 }}"  <!-- <div id="config-data" data-refresh-interval="{{ preferences.refresh_interval if preferences else 2000 }}" -->
-    data-max-data-points="{{ preferences.chart_data_points if preferences else 60 }}"  <!-- data-max-data-points="{{ preferences.chart_data_points if preferences else 60 }}" -->
-    data-server-id="{{ servers[0].id if servers else '' }}" style="display: none;">  <!-- data-server-id="{{ servers[0].id if servers else '' }}" style="display: none;"> -->
-</div>  <!-- </div> -->
-  <!-- blank line -->
-<!-- Hidden widget templates for Gridstack to use -->  <!-- <!-- Hidden widget templates for Gridstack to use --> -->
-<div id="widget-templates" style="display: none;">  <!-- <div id="widget-templates" style="display: none;"> -->
-    <div id="tpl-cpu">{{ cpu_widget('cpu-widget') }}</div>  <!-- <div id="tpl-cpu">{{ cpu_widget('cpu-widget') }}</div> -->
-    <div id="tpl-memory">{{ memory_widget('memory-widget') }}</div>  <!-- <div id="tpl-memory">{{ memory_widget('memory-widget') }}</div> -->
-    <div id="tpl-network">{{ network_widget('network-widget') }}</div>  <!-- <div id="tpl-network">{{ network_widget('network-widget') }}</div> -->
-    <div id="tpl-io">{{ io_widget('io-widget') }}</div>  <!-- <div id="tpl-io">{{ io_widget('io-widget') }}</div> -->
-    <div id="tpl-disk">{{ disk_widget('disk-widget') }}</div>  <!-- <div id="tpl-disk">{{ disk_widget('disk-widget') }}</div> -->
-</div>  <!-- </div> -->
-  <!-- blank line -->
-{% endblock %}  <!-- {% endblock %} -->
-  <!-- blank line -->
-{% block extra_js %}  <!-- {% block extra_js %} -->
-<script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>  <!-- <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script> -->
-<script>  <!-- <script> -->
-    // Configuration from data attributes  <!-- // Configuration from data attributes -->
-    const configData = document.getElementById('config-data');  <!-- const configData = document.getElementById('config-data'); -->
-    const refreshInterval = parseInt(configData.dataset.refreshInterval) || 2000;  <!-- const refreshInterval = parseInt(configData.dataset.refreshInterval) || 2000; -->
-    const maxDataPoints = parseInt(configData.dataset.maxDataPoints) || 60;  <!-- const maxDataPoints = parseInt(configData.dataset.maxDataPoints) || 60; -->
-    let currentServerId = configData.dataset.serverId ? parseInt(configData.dataset.serverId) : null;  <!-- let currentServerId = configData.dataset.serverId ? parseInt(configData.dataset.serverId) : null; -->
-  <!-- blank line -->
-    // Chart data storage  <!-- // Chart data storage -->
-    const cpuData = [];  <!-- const cpuData = []; -->
-    const memoryData = [];  <!-- const memoryData = []; -->
-    const networkData = [];  <!-- const networkData = []; -->
-    const labels = [];  <!-- const labels = []; -->
-  <!-- blank line -->
-    let grid = null;  <!-- let grid = null; -->
-    let cpuChart = null;  <!-- let cpuChart = null; -->
-    let memoryChart = null;  <!-- let memoryChart = null; -->
-    let networkChart = null;  <!-- let networkChart = null; -->
-    // Default layout configuration  <!-- // Default layout configuration -->
-    const defaultLayout = [  <!-- const defaultLayout = [ -->
-        { x: 0, y: 0, w: 4, h: 4, id: 'cpu', content: document.getElementById('tpl-cpu').innerHTML },  <!-- { x: 0, y: 0, w: 4, h: 4, id: 'cpu', content: document.getElementById('tpl-cpu').innerHTML }, -->
-        { x: 4, y: 0, w: 4, h: 4, id: 'memory', content: document.getElementById('tpl-memory').innerHTML },  <!-- { x: 4, y: 0, w: 4, h: 4, id: 'memory', content: document.getElementById('tpl-memory').innerHTML }, -->
-        { x: 8, y: 0, w: 4, h: 4, id: 'network', content: document.getElementById('tpl-network').innerHTML },  <!-- { x: 8, y: 0, w: 4, h: 4, id: 'network', content: document.getElementById('tpl-network').innerHTML }, -->
-        { x: 0, y: 4, w: 6, h: 4, id: 'io', content: document.getElementById('tpl-io').innerHTML },  <!-- { x: 0, y: 4, w: 6, h: 4, id: 'io', content: document.getElementById('tpl-io').innerHTML }, -->
-        { x: 6, y: 4, w: 6, h: 4, id: 'disk', content: document.getElementById('tpl-disk').innerHTML }  <!-- { x: 6, y: 4, w: 6, h: 4, id: 'disk', content: document.getElementById('tpl-disk').innerHTML } -->
-    ];  <!-- ]; -->
-  <!-- blank line -->
-    document.addEventListener('DOMContentLoaded', async function () {  <!-- document.addEventListener('DOMContentLoaded', async function () { -->
-        // Initialize Gridstack  <!-- // Initialize Gridstack -->
-        grid = GridStack.init({  <!-- grid = GridStack.init({ -->
-            column: 12,  <!-- column: 12, -->
-            cellHeight: 100,  <!-- cellHeight: 100, -->
-            margin: 10,  <!-- margin: 10, -->
-            animate: true,  <!-- animate: true, -->
-            float: true  <!-- float: true -->
-        });  <!-- }); -->
-  <!-- blank line -->
-        // Load saved layout or use default  <!-- // Load saved layout or use default -->
-        await loadLayout();  <!-- await loadLayout(); -->
-  <!-- blank line -->
-        // Initialize charts after widgets are in DOM  <!-- // Initialize charts after widgets are in DOM -->
-        initCharts();  <!-- initCharts(); -->
-  <!-- blank line -->
-        // Start updates  <!-- // Start updates -->
-        updateMetrics();  <!-- updateMetrics(); -->
-        setInterval(updateMetrics, refreshInterval);  <!-- setInterval(updateMetrics, refreshInterval); -->
-    });  <!-- }); -->
-  <!-- blank line -->
-    async function loadLayout() {  <!-- async function loadLayout() { -->
-        try {  <!-- try { -->
-            const response = await fetch('/api/dashboard/layout');  <!-- const response = await fetch('/api/dashboard/layout'); -->
-            const data = await response.json();  <!-- const data = await response.json(); -->
-  <!-- blank line -->
-            let layout = defaultLayout;  <!-- let layout = defaultLayout; -->
-  <!-- blank line -->
-            if (data.layout_config) {  <!-- if (data.layout_config) { -->
-                // Merge saved config with content templates  <!-- // Merge saved config with content templates -->
-                layout = data.layout_config.map(item => {  <!-- layout = data.layout_config.map(item => { -->
-                    const tplId = `tpl-${item.id}`;  <!-- const tplId = `tpl-${item.id}`; -->
-                    const tpl = document.getElementById(tplId);  <!-- const tpl = document.getElementById(tplId); -->
-                    return {  <!-- return { -->
-                        ...item,  <!-- ...item, -->
-                        content: tpl ? tpl.innerHTML : ''  <!-- content: tpl ? tpl.innerHTML : '' -->
-                    };  <!-- }; -->
-                });  <!-- }); -->
-            }  <!-- } -->
-  <!-- blank line -->
-            grid.load(layout);  <!-- grid.load(layout); -->
-  <!-- blank line -->
-        } catch (error) {  <!-- } catch (error) { -->
-            console.error('Error loading layout:', error);  <!-- console.error('Error loading layout:', error); -->
-            grid.load(defaultLayout);  <!-- grid.load(defaultLayout); -->
-        }  <!-- } -->
-    }  <!-- } -->
-  <!-- blank line -->
-    async function saveLayout() {  <!-- async function saveLayout() { -->
-        const layout = grid.save(false); // false = don't save content, just structure  <!-- const layout = grid.save(false); // false = don't save content, just structure -->
-        // Map back to simple IDs for storage  <!-- // Map back to simple IDs for storage -->
-        const simplifiedLayout = layout.map(item => ({  <!-- const simplifiedLayout = layout.map(item => ({ -->
-            x: item.x,  <!-- x: item.x, -->
-            y: item.y,  <!-- y: item.y, -->
-            w: item.w,  <!-- w: item.w, -->
-            h: item.h,  <!-- h: item.h, -->
-            id: item.id || item.el.querySelector('.widget').dataset.widgetType  <!-- id: item.id || item.el.querySelector('.widget').dataset.widgetType -->
-        }));  <!-- })); -->
-  <!-- blank line -->
-        try {  <!-- try { -->
-            const response = await fetch('/api/dashboard/layout', {  <!-- const response = await fetch('/api/dashboard/layout', { -->
-                method: 'POST',  <!-- method: 'POST', -->
-                headers: { 'Content-Type': 'application/json' },  <!-- headers: { 'Content-Type': 'application/json' }, -->
-                body: JSON.stringify({  <!-- body: JSON.stringify({ -->
-                    name: 'My Layout',  <!-- name: 'My Layout', -->
-                    layout_config: simplifiedLayout  <!-- layout_config: simplifiedLayout -->
-                })  <!-- }) -->
-            });  <!-- }); -->
-  <!-- blank line -->
-            if (response.ok) {  <!-- if (response.ok) { -->
-                // Show success feedback  <!-- // Show success feedback -->
-                const btn = document.querySelector('button[onclick="saveLayout()"]');  <!-- const btn = document.querySelector('button[onclick="saveLayout()"]'); -->
-                const originalText = btn.innerHTML;  <!-- const originalText = btn.innerHTML; -->
-                btn.innerHTML = '<i class="fas fa-check"></i> Saved!';  <!-- btn.innerHTML = '<i class="fas fa-check"></i> Saved!'; -->
-                setTimeout(() => btn.innerHTML = originalText, 2000);  <!-- setTimeout(() => btn.innerHTML = originalText, 2000); -->
-            }  <!-- } -->
-        } catch (error) {  <!-- } catch (error) { -->
-            console.error('Error saving layout:', error);  <!-- console.error('Error saving layout:', error); -->
-            alert('Failed to save layout');  <!-- alert('Failed to save layout'); -->
-        }  <!-- } -->
-    }  <!-- } -->
-  <!-- blank line -->
-    function resetLayout() {  <!-- function resetLayout() { -->
-        if (confirm('Reset to default layout?')) {  <!-- if (confirm('Reset to default layout?')) { -->
-            grid.removeAll();  <!-- grid.removeAll(); -->
-            grid.load(defaultLayout);  <!-- grid.load(defaultLayout); -->
-            // Re-init charts as DOM elements were recreated  <!-- // Re-init charts as DOM elements were recreated -->
-            setTimeout(initCharts, 100);  <!-- setTimeout(initCharts, 100); -->
-        }  <!-- } -->
-    }  <!-- } -->
-  <!-- blank line -->
-    function initCharts() {  <!-- function initCharts() { -->
-        // CPU Chart  <!-- // CPU Chart -->
-        const cpuCanvas = document.getElementById('cpu-widget-chart');  <!-- const cpuCanvas = document.getElementById('cpu-widget-chart'); -->
-        if (cpuCanvas) {  <!-- if (cpuCanvas) { -->
-            if (cpuChart) cpuChart.destroy();  <!-- if (cpuChart) cpuChart.destroy(); -->
-            cpuChart = new Chart(cpuCanvas, {  <!-- cpuChart = new Chart(cpuCanvas, { -->
-                type: 'line',  <!-- type: 'line', -->
-                data: {  <!-- data: { -->
-                    labels: labels,  <!-- labels: labels, -->
-                    datasets: [{  <!-- datasets: [{ -->
-                        label: 'CPU %',  <!-- label: 'CPU %', -->
-                        data: cpuData,  <!-- data: cpuData, -->
-                        borderColor: 'rgba(56, 189, 248, 1)',  <!-- borderColor: 'rgba(56, 189, 248, 1)', -->
-                        backgroundColor: 'rgba(56, 189, 248, 0.1)',  <!-- backgroundColor: 'rgba(56, 189, 248, 0.1)', -->
-                        tension: 0.4,  <!-- tension: 0.4, -->
-                        fill: true  <!-- fill: true -->
-                    }]  <!-- }] -->
-                },  <!-- }, -->
-                options: {  <!-- options: { -->
-                    responsive: true,  <!-- responsive: true, -->
-                    maintainAspectRatio: false,  <!-- maintainAspectRatio: false, -->
-                    plugins: { legend: { display: false } },  <!-- plugins: { legend: { display: false } }, -->
-                    scales: {  <!-- scales: { -->
-                        y: { beginAtZero: true, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } },  <!-- y: { beginAtZero: true, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } }, -->
-                        x: { display: false }  <!-- x: { display: false } -->
-                    }  <!-- } -->
-                }  <!-- } -->
-            });  <!-- }); -->
-        }  <!-- } -->
-        // Memory Chart  <!-- // Memory Chart -->
-        const memCanvas = document.getElementById('memory-widget-chart');  <!-- const memCanvas = document.getElementById('memory-widget-chart'); -->
-        if (memCanvas) {  <!-- if (memCanvas) { -->
-            if (memoryChart) memoryChart.destroy();  <!-- if (memoryChart) memoryChart.destroy(); -->
-            memoryChart = new Chart(memCanvas, {  <!-- memoryChart = new Chart(memCanvas, { -->
-                type: 'line',  <!-- type: 'line', -->
-                data: {  <!-- data: { -->
-                    labels: labels,  <!-- labels: labels, -->
-                    datasets: [{  <!-- datasets: [{ -->
-                        label: 'Memory %',  <!-- label: 'Memory %', -->
-                        data: memoryData,  <!-- data: memoryData, -->
-                        borderColor: 'rgba(168, 85, 247, 1)',  <!-- borderColor: 'rgba(168, 85, 247, 1)', -->
-                        backgroundColor: 'rgba(168, 85, 247, 0.1)',  <!-- backgroundColor: 'rgba(168, 85, 247, 0.1)', -->
-                        tension: 0.4,  <!-- tension: 0.4, -->
-                        fill: true  <!-- fill: true -->
-                    }]  <!-- }] -->
-                },  <!-- }, -->
-                options: {  <!-- options: { -->
-                    responsive: true,  <!-- responsive: true, -->
-                    maintainAspectRatio: false,  <!-- maintainAspectRatio: false, -->
-                    plugins: { legend: { display: false } },  <!-- plugins: { legend: { display: false } }, -->
-                    scales: {  <!-- scales: { -->
-                        y: { beginAtZero: true, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } },  <!-- y: { beginAtZero: true, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } }, -->
-                        x: { display: false }  <!-- x: { display: false } -->
-                    }  <!-- } -->
-                }  <!-- } -->
-            });  <!-- }); -->
-        }  <!-- } -->
-        // Network Chart  <!-- // Network Chart -->
-        const netCanvas = document.getElementById('network-widget-chart');  <!-- const netCanvas = document.getElementById('network-widget-chart'); -->
-        if (netCanvas) {  <!-- if (netCanvas) { -->
-            if (networkChart) networkChart.destroy();  <!-- if (networkChart) networkChart.destroy(); -->
-            networkChart = new Chart(netCanvas, {  <!-- networkChart = new Chart(netCanvas, { -->
-                type: 'line',  <!-- type: 'line', -->
-                data: {  <!-- data: { -->
-                    labels: labels,  <!-- labels: labels, -->
-                    datasets: [{  <!-- datasets: [{ -->
-                        label: 'Network Sent (bytes)',  <!-- label: 'Network Sent (bytes)', -->
-                        data: networkData,  <!-- data: networkData, -->
-                        borderColor: 'rgba(255, 99, 132, 1)',  <!-- borderColor: 'rgba(255, 99, 132, 1)', -->
-                        backgroundColor: 'rgba(255, 99, 132, 0.1)',  <!-- backgroundColor: 'rgba(255, 99, 132, 0.1)', -->
-                        tension: 0.4,  <!-- tension: 0.4, -->
-                        fill: true  <!-- fill: true -->
-                    }]  <!-- }] -->
-                },  <!-- }, -->
-                options: {  <!-- options: { -->
-                    responsive: true,  <!-- responsive: true, -->
-                    maintainAspectRatio: false,  <!-- maintainAspectRatio: false, -->
-                    plugins: { legend: { display: false } },  <!-- plugins: { legend: { display: false } }, -->
-                    scales: {  <!-- scales: { -->
-                        y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } },  <!-- y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } }, -->
-                        x: { display: false }  <!-- x: { display: false } -->
-                    }  <!-- } -->
-                }  <!-- } -->
-            });  <!-- }); -->
-        }  <!-- } -->
-  <!-- blank line -->
-    }  <!-- } -->
-  <!-- blank line -->
-    // Server selection  <!-- // Server selection -->
-    const serverSelect = document.getElementById('serverSelect');  <!-- const serverSelect = document.getElementById('serverSelect'); -->
-    if (serverSelect) {  <!-- if (serverSelect) { -->
-        serverSelect.addEventListener('change', (e) => {  <!-- serverSelect.addEventListener('change', (e) => { -->
-            currentServerId = parseInt(e.target.value);  <!-- currentServerId = parseInt(e.target.value); -->
-            updateMetrics();  <!-- updateMetrics(); -->
-        });  <!-- }); -->
-    }  <!-- } -->
-  <!-- blank line -->
-    // Fetch and update metrics  <!-- // Fetch and update metrics -->
-    async function updateMetrics() {  <!-- async function updateMetrics() { -->
-        try {  <!-- try { -->
-            const url = currentServerId ? `/api/metrics?server_id=${currentServerId}` : '/api/metrics';  <!-- const url = currentServerId ? `/api/metrics?server_id=${currentServerId}` : '/api/metrics'; -->
-            const response = await fetch(url);  <!-- const response = await fetch(url); -->
-            const data = await response.json();  <!-- const data = await response.json(); -->
-  <!-- blank line -->
-            // Update CPU  <!-- // Update CPU -->
-            updateText('cpu-widget-percent', data.cpu.percent.toFixed(1));  <!-- updateText('cpu-widget-percent', data.cpu.percent.toFixed(1)); -->
-            updateText('cpu-widget-freq', data.cpu.freq);  <!-- updateText('cpu-widget-freq', data.cpu.freq); -->
-            if (data.cpu.temp_c) {  <!-- if (data.cpu.temp_c) { -->
-                updateText('cpu-widget-temp', `${data.cpu.temp_c.toFixed(1)}°C / ${data.cpu.temp_f.toFixed(1)}°F`);  <!-- updateText('cpu-widget-temp', `${data.cpu.temp_c.toFixed(1)}°C / ${data.cpu.temp_f.toFixed(1)}°F`); -->
-            }  <!-- } -->
-  <!-- blank line -->
-            // Update Memory  <!-- // Update Memory -->
-            updateText('memory-widget-percent', data.memory.percent.toFixed(1));  <!-- updateText('memory-widget-percent', data.memory.percent.toFixed(1)); -->
-            updateText('memory-widget-used', data.memory.used);  <!-- updateText('memory-widget-used', data.memory.used); -->
-            updateText('memory-widget-total', data.memory.total);  <!-- updateText('memory-widget-total', data.memory.total); -->
-  <!-- blank line -->
-            // Update Network  <!-- // Update Network -->
-            if (data.network) {  <!-- if (data.network) { -->
-                updateText('network-widget-sent', data.network.bytes_sent);  <!-- updateText('network-widget-sent', data.network.bytes_sent); -->
-                updateText('network-widget-recv', data.network.bytes_recv);  <!-- updateText('network-widget-recv', data.network.bytes_recv); -->
-                // Push to network chart data  <!-- // Push to network chart data -->
-                networkData.push(data.network.bytes_sent_raw);  <!-- networkData.push(data.network.bytes_sent_raw); -->
-            }  <!-- } -->
-            if (data.connections) {  <!-- if (data.connections) { -->
-                updateText('network-widget-connections', data.connections.total);  <!-- updateText('network-widget-connections', data.connections.total); -->
-                updateText('network-widget-established', data.connections.established);  <!-- updateText('network-widget-established', data.connections.established); -->
-            }  <!-- } -->
-  <!-- blank line -->
-            // Update Disk I/O  <!-- // Update Disk I/O -->
-            updateText('io-widget-read', data.io.read_bytes);  <!-- updateText('io-widget-read', data.io.read_bytes); -->
-            updateText('io-widget-write', data.io.write_bytes);  <!-- updateText('io-widget-write', data.io.write_bytes); -->
-            updateText('io-widget-read-count', `${data.io.read_count.toLocaleString()} ops`);  <!-- updateText('io-widget-read-count', `${data.io.read_count.toLocaleString()} ops`); -->
-            updateText('io-widget-write-count', `${data.io.write_count.toLocaleString()} ops`);  <!-- updateText('io-widget-write-count', `${data.io.write_count.toLocaleString()} ops`); -->
-  <!-- blank line -->
-            // Update Disk Usage  <!-- // Update Disk Usage -->
-            const diskList = document.getElementById('disk-widget-list');  <!-- const diskList = document.getElementById('disk-widget-list'); -->
-            if (diskList) {  <!-- if (diskList) { -->
-                diskList.innerHTML = '';  <!-- diskList.innerHTML = ''; -->
-                data.disk.forEach(disk => {  <!-- data.disk.forEach(disk => { -->
-                    const diskItem = document.createElement('div');  <!-- const diskItem = document.createElement('div'); -->
-                    diskItem.className = 'disk-item clickable-disk-item';  <!-- diskItem.className = 'disk-item clickable-disk-item'; -->
-                    diskItem.onclick = () => showDiskAnalysis(disk.mountpoint);  <!-- diskItem.onclick = () => showDiskAnalysis(disk.mountpoint); -->
-                    diskItem.title = 'Click to analyze disk space usage';  <!-- diskItem.title = 'Click to analyze disk space usage'; -->
-                    diskItem.innerHTML = `  <!-- diskItem.innerHTML = ` -->
-                        <div class="disk-header">  <!-- <div class="disk-header"> -->
-                            <span><strong>${disk.device}</strong> (${disk.mountpoint})</span>  <!-- <span><strong>${disk.device}</strong> (${disk.mountpoint})</span> -->
-                            <span>${disk.used} / ${disk.total} (${disk.percent.toFixed(1)}%)</span>  <!-- <span>${disk.used} / ${disk.total} (${disk.percent.toFixed(1)}%)</span> -->
-                        </div>  <!-- </div> -->
-                        <div class="disk-bar-bg">  <!-- <div class="disk-bar-bg"> -->
-                            <div class="disk-bar-fill" style="width: ${disk.percent}%"></div>  <!-- <div class="disk-bar-fill" style="width: ${disk.percent}%"></div> -->
-                        </div>  <!-- </div> -->
-                    `;  <!-- `; -->
-                    diskList.appendChild(diskItem);  <!-- diskList.appendChild(diskItem); -->
-                });  <!-- }); -->
-            }  <!-- } -->
-  <!-- blank line -->
-            // Update charts  <!-- // Update charts -->
-            const now = new Date().toLocaleTimeString();  <!-- const now = new Date().toLocaleTimeString(); -->
-            labels.push(now);  <!-- labels.push(now); -->
-            cpuData.push(data.cpu.percent);  <!-- cpuData.push(data.cpu.percent); -->
-            memoryData.push(data.memory.percent);  <!-- memoryData.push(data.memory.percent); -->
-  <!-- blank line -->
-            if (labels.length > maxDataPoints) {  <!-- if (labels.length > maxDataPoints) { -->
-                labels.shift();  <!-- labels.shift(); -->
-                cpuData.shift();  <!-- cpuData.shift(); -->
-                memoryData.shift();  <!-- memoryData.shift(); -->
-                networkData.shift();  <!-- networkData.shift(); -->
-            }  <!-- } -->
-  <!-- blank line -->
-            if (cpuChart) cpuChart.update('none');  <!-- if (cpuChart) cpuChart.update('none'); -->
-            if (memoryChart) memoryChart.update('none');  <!-- if (memoryChart) memoryChart.update('none'); -->
-            if (networkChart) networkChart.update('none');  <!-- if (networkChart) networkChart.update('none'); -->
-        } catch (error) {  <!-- } catch (error) { -->
-            console.error('Error fetching metrics:', error);  <!-- console.error('Error fetching metrics:', error); -->
-        }  <!-- } -->
-    }  <!-- } -->
-  <!-- blank line -->
-    function updateText(id, value) {  <!-- function updateText(id, value) { -->
-        const el = document.getElementById(id);  <!-- const el = document.getElementById(id); -->
-        if (el) el.textContent = value;  <!-- if (el) el.textContent = value; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    // Network Connection Details Modal  <!-- // Network Connection Details Modal -->
-    async function showConnectionDetails(status) {  <!-- async function showConnectionDetails(status) { -->
-        try {  <!-- try { -->
-            const url = status === 'all'  <!-- const url = status === 'all' -->
-                ? '/api/network/connections'  <!-- ? '/api/network/connections' -->
-                : `/api/network/connections?status=${status}`;  <!-- : `/api/network/connections?status=${status}`; -->
-  <!-- blank line -->
-            const response = await fetch(url);  <!-- const response = await fetch(url); -->
-            const data = await response.json();  <!-- const data = await response.json(); -->
-  <!-- blank line -->
-            if (data.error) {  <!-- if (data.error) { -->
-                alert(`Error: ${data.error}`);  <!-- alert(`Error: ${data.error}`); -->
-                return;  <!-- return; -->
-            }  <!-- } -->
-  <!-- blank line -->
-            // Populate modal with connection data  <!-- // Populate modal with connection data -->
-            const tableBody = document.getElementById('connection-table-body');  <!-- const tableBody = document.getElementById('connection-table-body'); -->
-            tableBody.innerHTML = '';  <!-- tableBody.innerHTML = ''; -->
-  <!-- blank line -->
-            if (data.connections.length === 0) {  <!-- if (data.connections.length === 0) { -->
-                tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">No connections found</td></tr>';  <!-- tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">No connections found</td></tr>'; -->
-            } else {  <!-- } else { -->
-                data.connections.forEach(conn => {  <!-- data.connections.forEach(conn => { -->
-                    const row = document.createElement('tr');  <!-- const row = document.createElement('tr'); -->
-                    row.innerHTML = `  <!-- row.innerHTML = ` -->
-                        <td>${conn.protocol}</td>  <!-- <td>${conn.protocol}</td> -->
-                        <td>${conn.local_address}</td>  <!-- <td>${conn.local_address}</td> -->
-                        <td>${conn.remote_address}</td>  <!-- <td>${conn.remote_address}</td> -->
-                        <td><span class="status-badge status-${conn.status.toLowerCase()}">${conn.status}</span></td>  <!-- <td><span class="status-badge status-${conn.status.toLowerCase()}">${conn.status}</span></td> -->
-                        <td>${conn.pid}</td>  <!-- <td>${conn.pid}</td> -->
-                        <td>${conn.process}</td>  <!-- <td>${conn.process}</td> -->
-                    `;  <!-- `; -->
-                    tableBody.appendChild(row);  <!-- tableBody.appendChild(row); -->
-                });  <!-- }); -->
-            }  <!-- } -->
-  <!-- blank line -->
-            // Update modal title  <!-- // Update modal title -->
-            const modalTitle = document.getElementById('connection-modal-title');  <!-- const modalTitle = document.getElementById('connection-modal-title'); -->
-            modalTitle.textContent = status === 'all'  <!-- modalTitle.textContent = status === 'all' -->
-                ? `All Network Connections (${data.count})`  <!-- ? `All Network Connections (${data.count})` -->
-                : `Established Connections (${data.count})`;  <!-- : `Established Connections (${data.count})`; -->
-  <!-- blank line -->
-            // Show modal  <!-- // Show modal -->
-            document.getElementById('connection-modal').style.display = 'flex';  <!-- document.getElementById('connection-modal').style.display = 'flex'; -->
-        } catch (error) {  <!-- } catch (error) { -->
-            console.error('Error fetching connection details:', error);  <!-- console.error('Error fetching connection details:', error); -->
-            alert('Failed to fetch connection details');  <!-- alert('Failed to fetch connection details'); -->
-        }  <!-- } -->
-    }  <!-- } -->
-  <!-- blank line -->
-    function closeConnectionModal() {  <!-- function closeConnectionModal() { -->
-        document.getElementById('connection-modal').style.display = 'none';  <!-- document.getElementById('connection-modal').style.display = 'none'; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    // Close modal when clicking outside  <!-- // Close modal when clicking outside -->
-    window.onclick = function (event) {  <!-- window.onclick = function (event) { -->
-        const modal = document.getElementById('connection-modal');  <!-- const modal = document.getElementById('connection-modal'); -->
-        if (event.target == modal) {  <!-- if (event.target == modal) { -->
-            closeConnectionModal();  <!-- closeConnectionModal(); -->
-        }  <!-- } -->
-        const ioModal = document.getElementById('io-modal');  <!-- const ioModal = document.getElementById('io-modal'); -->
-        if (event.target == ioModal) {  <!-- if (event.target == ioModal) { -->
-            closeIOModal();  <!-- closeIOModal(); -->
-        }  <!-- } -->
-        const diskModal = document.getElementById('disk-modal');  <!-- const diskModal = document.getElementById('disk-modal'); -->
-        if (event.target == diskModal) {  <!-- if (event.target == diskModal) { -->
-            closeDiskModal();  <!-- closeDiskModal(); -->
-        }  <!-- } -->
-    }  <!-- } -->
-  <!-- blank line -->
-    // Disk I/O Process Details  <!-- // Disk I/O Process Details -->
-    async function showIOProcessDetails() {  <!-- async function showIOProcessDetails() { -->
-        const modal = document.getElementById('io-modal');  <!-- const modal = document.getElementById('io-modal'); -->
-        const tbody = document.getElementById('io-table-body');  <!-- const tbody = document.getElementById('io-table-body'); -->
-  <!-- blank line -->
-        // Show modal immediately  <!-- // Show modal immediately -->
-        modal.style.display = 'block';  <!-- modal.style.display = 'block'; -->
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Loading...</td></tr>';  <!-- tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Loading...</td></tr>'; -->
-  <!-- blank line -->
-        try {  <!-- try { -->
-            const response = await fetch('/api/disk/io-processes');  <!-- const response = await fetch('/api/disk/io-processes'); -->
-            const data = await response.json();  <!-- const data = await response.json(); -->
-  <!-- blank line -->
-            tbody.innerHTML = '';  <!-- tbody.innerHTML = ''; -->
-  <!-- blank line -->
-            if (data.processes && data.processes.length > 0) {  <!-- if (data.processes && data.processes.length > 0) { -->
-                data.processes.forEach(proc => {  <!-- data.processes.forEach(proc => { -->
-                    const row = document.createElement('tr');  <!-- const row = document.createElement('tr'); -->
-                    row.innerHTML = `  <!-- row.innerHTML = ` -->
-                        <td><span class="process-name">${proc.name}</span></td>  <!-- <td><span class="process-name">${proc.name}</span></td> -->
-                        <td>${proc.pid}</td>  <!-- <td>${proc.pid}</td> -->
-                        <td>${proc.read_bytes_formatted}</td>  <!-- <td>${proc.read_bytes_formatted}</td> -->
-                        <td>${proc.write_bytes_formatted}</td>  <!-- <td>${proc.write_bytes_formatted}</td> -->
-                        <td>${proc.read_count}</td>  <!-- <td>${proc.read_count}</td> -->
-                        <td>${proc.write_count}</td>  <!-- <td>${proc.write_count}</td> -->
-                    `;  <!-- `; -->
-                    tbody.appendChild(row);  <!-- tbody.appendChild(row); -->
-                });  <!-- }); -->
-            } else {  <!-- } else { -->
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No active I/O processes found</td></tr>';  <!-- tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No active I/O processes found</td></tr>'; -->
-            }  <!-- } -->
-        } catch (error) {  <!-- } catch (error) { -->
-            console.error('Error fetching I/O details:', error);  <!-- console.error('Error fetching I/O details:', error); -->
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--danger);">Error loading data</td></tr>';  <!-- tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--danger);">Error loading data</td></tr>'; -->
-        }  <!-- } -->
-    }  <!-- } -->
-  <!-- blank line -->
-    function closeIOModal() {  <!-- function closeIOModal() { -->
-        document.getElementById('io-modal').style.display = 'none';  <!-- document.getElementById('io-modal').style.display = 'none'; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    // Disk Analysis  <!-- // Disk Analysis -->
-    async function showDiskAnalysis(mountpoint) {  <!-- async function showDiskAnalysis(mountpoint) { -->
-        const modal = document.getElementById('disk-modal');  <!-- const modal = document.getElementById('disk-modal'); -->
-        const loading = document.getElementById('disk-loading');  <!-- const loading = document.getElementById('disk-loading'); -->
-        const content = document.getElementById('disk-analysis-content');  <!-- const content = document.getElementById('disk-analysis-content'); -->
-        const list = document.getElementById('directory-list');  <!-- const list = document.getElementById('directory-list'); -->
-        const title = document.getElementById('disk-modal-title');  <!-- const title = document.getElementById('disk-modal-title'); -->
-  <!-- blank line -->
-        title.textContent = `Disk Analysis: ${mountpoint}`;  <!-- title.textContent = `Disk Analysis: ${mountpoint}`; -->
-        modal.style.display = 'block';  <!-- modal.style.display = 'block'; -->
-        loading.style.display = 'block';  <!-- loading.style.display = 'block'; -->
-        content.style.display = 'none';  <!-- content.style.display = 'none'; -->
-        list.innerHTML = '';  <!-- list.innerHTML = ''; -->
-  <!-- blank line -->
-        try {  <!-- try { -->
-            const response = await fetch(`/api/disk/analyze?mountpoint=${encodeURIComponent(mountpoint)}`);  <!-- const response = await fetch(`/api/disk/analyze?mountpoint=${encodeURIComponent(mountpoint)}`); -->
-            const data = await response.json();  <!-- const data = await response.json(); -->
-  <!-- blank line -->
-            loading.style.display = 'none';  <!-- loading.style.display = 'none'; -->
-            content.style.display = 'block';  <!-- content.style.display = 'block'; -->
-  <!-- blank line -->
-            if (data.directories && data.directories.length > 0) {  <!-- if (data.directories && data.directories.length > 0) { -->
-                // Find max size for progress bars  <!-- // Find max size for progress bars -->
-                const maxSize = data.directories[0].size;  <!-- const maxSize = data.directories[0].size; -->
-  <!-- blank line -->
-                data.directories.forEach(dir => {  <!-- data.directories.forEach(dir => { -->
-                    const percent = (dir.size / maxSize) * 100;  <!-- const percent = (dir.size / maxSize) * 100; -->
-                    const item = document.createElement('div');  <!-- const item = document.createElement('div'); -->
-                    item.className = 'directory-item';  <!-- item.className = 'directory-item'; -->
-                    item.innerHTML = `  <!-- item.innerHTML = ` -->
-                        <div class="directory-info">  <!-- <div class="directory-info"> -->
-                            <span class="directory-path" title="${dir.path}">${dir.path}</span>  <!-- <span class="directory-path" title="${dir.path}">${dir.path}</span> -->
-                            <span class="directory-size">${dir.size_formatted}</span>  <!-- <span class="directory-size">${dir.size_formatted}</span> -->
-                        </div>  <!-- </div> -->
-                        <div class="directory-bar-bg">  <!-- <div class="directory-bar-bg"> -->
-                            <div class="directory-bar-fill" style="width: ${percent}%"></div>  <!-- <div class="directory-bar-fill" style="width: ${percent}%"></div> -->
-                        </div>  <!-- </div> -->
-                        <div class="directory-meta">  <!-- <div class="directory-meta"> -->
-                            ${dir.file_count.toLocaleString()} files  <!-- ${dir.file_count.toLocaleString()} files -->
-                        </div>  <!-- </div> -->
-                    `;  <!-- `; -->
-                    list.appendChild(item);  <!-- list.appendChild(item); -->
-                });  <!-- }); -->
-            } else {  <!-- } else { -->
-                list.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No directories found or permission denied</p>';  <!-- list.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No directories found or permission denied</p>'; -->
-            }  <!-- } -->
-        } catch (error) {  <!-- } catch (error) { -->
-            console.error('Error analyzing disk:', error);  <!-- console.error('Error analyzing disk:', error); -->
-            loading.style.display = 'none';  <!-- loading.style.display = 'none'; -->
-            content.style.display = 'block';  <!-- content.style.display = 'block'; -->
-            list.innerHTML = '<p style="text-align: center; color: var(--danger);">Error analyzing disk usage</p>';  <!-- list.innerHTML = '<p style="text-align: center; color: var(--danger);">Error analyzing disk usage</p>'; -->
-        }  <!-- } -->
-    }  <!-- } -->
-  <!-- blank line -->
-    function closeDiskModal() {  <!-- function closeDiskModal() { -->
-        document.getElementById('disk-modal').style.display = 'none';  <!-- document.getElementById('disk-modal').style.display = 'none'; -->
-    }  <!-- } -->
-  <!-- blank line -->
-</script>  <!-- </script> -->
-{% endblock %}  <!-- {% endblock %} -->
+{% extends "base.html" %}  # {% extends "base.html" %}
+{% from 'macros/cpu_widget.html' import cpu_widget %}  # {% from 'macros/cpu_widget.html' import cpu_widget %}
+{% from 'macros/memory_widget.html' import memory_widget %}  # {% from 'macros/memory_widget.html' import memory_widget %}
+{% from 'macros/network_widget.html' import network_widget %}  # {% from 'macros/network_widget.html' import network_widget %}
+{% from 'macros/disk_widget.html' import disk_widget %}  # {% from 'macros/disk_widget.html' import disk_widget %}
+{% from 'macros/io_widget.html' import io_widget %}  # {% from 'macros/io_widget.html' import io_widget %}
+
+{% block title %}Dashboard - System Monitor{% endblock %}  # {% block title %}Dashboard - System Monitor{% endblock %}
+
+{% block extra_css %}  # {% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" rel="stylesheet" />  # <link href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" rel="stylesheet" />
+<style>  # <style>
+    .grid-stack {  # .grid-stack {
+        background: rgba(255, 255, 255, 0.02);  # background: rgba(255, 255, 255, 0.02);
+        border-radius: 1rem;  # border-radius: 1rem;
+        min-height: 80vh;  # min-height: 80vh;
+    }  # }
+
+    .grid-stack-item-content {  # .grid-stack-item-content {
+        overflow: hidden !important;  # overflow: hidden !important;
+    }  # }
+
+    .widget {  # .widget {
+        height: 100%;  # height: 100%;
+        width: 100%;  # width: 100%;
+        display: flex;  # display: flex;
+        flex-direction: column;  # flex-direction: column;
+    }  # }
+
+    .dashboard-actions {  # .dashboard-actions {
+        display: flex;  # display: flex;
+        gap: 1rem;  # gap: 1rem;
+        margin-left: auto;  # margin-left: auto;
+    }  # }
+
+    .grid-stack-item.ui-draggable-dragging {  # .grid-stack-item.ui-draggable-dragging {
+        opacity: 0.8;  # opacity: 0.8;
+        z-index: 1000;  # z-index: 1000;
+    }  # }
+</style>  # </style>
+{% endblock %}  # {% endblock %}
+
+{% block content %}  # {% block content %}
+<div class="container">  # <div class="container">
+    <header>  # <header>
+        <h1>System Monitor Dashboard</h1>  # <h1>System Monitor Dashboard</h1>
+        <div style="display: flex; gap: 1rem; align-items: center; width: 100%;">  # <div style="display: flex; gap: 1rem; align-items: center; width: 100%;">
+            {% if servers|length > 1 %}  # {% if servers|length > 1 %}
+            <select id="serverSelect"  # <select id="serverSelect"
+                style="padding: 0.5rem 1rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);">  # style="padding: 0.5rem 1rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);">
+                {% for server in servers %}  # {% for server in servers %}
+                <option value="{{ server.id }}">{{ server.name }}</option>  # <option value="{{ server.id }}">{{ server.name }}</option>
+                {% endfor %}  # {% endfor %}
+            </select>  # </select>
+            {% endif %}  # {% endif %}
+
+            <div class="status-indicator">  # <div class="status-indicator">
+                <span class="dot"></span> Live  # <span class="dot"></span> Live
+            </div>  # </div>
+
+            <div id="datetime-display" class="datetime-dashboard"></div>  # <div id="datetime-display" class="datetime-dashboard"></div>
+
+            <div class="dashboard-actions">  # <div class="dashboard-actions">
+                <button class="btn btn-secondary btn-sm" onclick="resetLayout()">  # <button class="btn btn-secondary btn-sm" onclick="resetLayout()">
+                    <i class="fas fa-undo"></i> Reset Layout  # <i class="fas fa-undo"></i> Reset Layout
+                </button>  # </button>
+                <button class="btn btn-primary btn-sm" onclick="saveLayout()">  # <button class="btn btn-primary btn-sm" onclick="saveLayout()">
+                    <i class="fas fa-save"></i> Save Layout  # <i class="fas fa-save"></i> Save Layout
+                </button>  # </button>
+            </div>  # </div>
+        </div>  # </div>
+    </header>  # </header>
+
+    <div class="grid-stack">  # <div class="grid-stack">
+        <!-- Widgets will be injected here by Gridstack -->  # <!-- Widgets will be injected here by Gridstack -->
+    </div>  # </div>
+
+    <!-- CPU Details Modal -->  # <!-- CPU Details Modal -->
+    <div id="cpu-modal" class="modal">  # <div id="cpu-modal" class="modal">
+        <div class="modal-content">  # <div class="modal-content">
+            <div class="modal-header">  # <div class="modal-header">
+                <h2 id="cpu-modal-title">Top CPU Processes</h2>  # <h2 id="cpu-modal-title">Top CPU Processes</h2>
+                <div class="modal-controls">  # <div class="modal-controls">
+                    <button class="modal-btn" onclick="toggleMinimize('cpu-modal')"><i  # <button class="modal-btn" onclick="toggleMinimize('cpu-modal')"><i
+                            class="fas fa-minus"></i></button>  # class="fas fa-minus"></i></button>
+                    <button class="modal-btn" onclick="toggleMaximize('cpu-modal')"><i  # <button class="modal-btn" onclick="toggleMaximize('cpu-modal')"><i
+                            class="far fa-square"></i></button>  # class="far fa-square"></i></button>
+                    <button class="modal-close" onclick="closeCPUModal()">&times;</button>  # <button class="modal-close" onclick="closeCPUModal()">&times;</button>
+                </div>  # </div>
+            </div>  # </div>
+            <div class="modal-body">  # <div class="modal-body">
+                <table class="connection-table">  # <table class="connection-table">
+                    <thead>  # <thead>
+                        <tr>  # <tr>
+                            <th>Process</th>  # <th>Process</th>
+                            <th>PID</th>  # <th>PID</th>
+                            <th>User</th>  # <th>User</th>
+                            <th>CPU %</th>  # <th>CPU %</th>
+                            <th>Memory %</th>  # <th>Memory %</th>
+                        </tr>  # </tr>
+                    </thead>  # </thead>
+                    <tbody id="cpu-table-body">  # <tbody id="cpu-table-body">
+                        <!-- Rows inserted here -->  # <!-- Rows inserted here -->
+                    </tbody>  # </tbody>
+                </table>  # </table>
+            </div>  # </div>
+        </div>  # </div>
+    </div>  # </div>
+
+    <!-- Memory Details Modal -->  # <!-- Memory Details Modal -->
+    <div id="memory-modal" class="modal">  # <div id="memory-modal" class="modal">
+        <div class="modal-content">  # <div class="modal-content">
+            <div class="modal-header">  # <div class="modal-header">
+                <h2 id="memory-modal-title">Top Memory Processes</h2>  # <h2 id="memory-modal-title">Top Memory Processes</h2>
+                <div class="modal-controls">  # <div class="modal-controls">
+                    <button class="modal-btn" onclick="toggleMinimize('memory-modal')"><i  # <button class="modal-btn" onclick="toggleMinimize('memory-modal')"><i
+                            class="fas fa-minus"></i></button>  # class="fas fa-minus"></i></button>
+                    <button class="modal-btn" onclick="toggleMaximize('memory-modal')"><i  # <button class="modal-btn" onclick="toggleMaximize('memory-modal')"><i
+                            class="far fa-square"></i></button>  # class="far fa-square"></i></button>
+                    <button class="modal-close" onclick="closeMemoryModal()">&times;</button>  # <button class="modal-close" onclick="closeMemoryModal()">&times;</button>
+                </div>  # </div>
+            </div>  # </div>
+            <div class="modal-body">  # <div class="modal-body">
+                <table class="connection-table">  # <table class="connection-table">
+                    <thead>  # <thead>
+                        <tr>  # <tr>
+                            <th>Process</th>  # <th>Process</th>
+                            <th>PID</th>  # <th>PID</th>
+                            <th>User</th>  # <th>User</th>
+                            <th>Memory %</th>  # <th>Memory %</th>
+                            <th>CPU %</th>  # <th>CPU %</th>
+                        </tr>  # </tr>
+                    </thead>  # </thead>
+                    <tbody id="memory-table-body">  # <tbody id="memory-table-body">
+                        <!-- Rows inserted here -->  # <!-- Rows inserted here -->
+                    </tbody>  # </tbody>
+                </table>  # </table>
+            </div>  # </div>
+        </div>  # </div>
+    </div>  # </div>
+
+    <!-- Network Connections Modal -->  # <!-- Network Connections Modal -->
+    <div id="connection-modal" class="modal">  # <div id="connection-modal" class="modal">
+        <div class="modal-content">  # <div class="modal-content">
+            <div class="modal-header">  # <div class="modal-header">
+                <h2 id="connection-modal-title">Network Connections</h2>  # <h2 id="connection-modal-title">Network Connections</h2>
+                <div class="modal-controls">  # <div class="modal-controls">
+                    <button class="modal-btn" onclick="toggleMinimize('connection-modal')"><i  # <button class="modal-btn" onclick="toggleMinimize('connection-modal')"><i
+                            class="fas fa-minus"></i></button>  # class="fas fa-minus"></i></button>
+                    <button class="modal-btn" onclick="toggleMaximize('connection-modal')"><i  # <button class="modal-btn" onclick="toggleMaximize('connection-modal')"><i
+                            class="far fa-square"></i></button>  # class="far fa-square"></i></button>
+                    <button class="modal-close" onclick="closeConnectionModal()">&times;</button>  # <button class="modal-close" onclick="closeConnectionModal()">&times;</button>
+                </div>  # </div>
+            </div>  # </div>
+            <div class="modal-body">  # <div class="modal-body">
+                <table class="connection-table">  # <table class="connection-table">
+                    <thead>  # <thead>
+                        <tr>  # <tr>
+                            <th>Protocol</th>  # <th>Protocol</th>
+                            <th>Local Address</th>  # <th>Local Address</th>
+                            <th>Remote Address</th>  # <th>Remote Address</th>
+                            <th>Status</th>  # <th>Status</th>
+                            <th>PID</th>  # <th>PID</th>
+                            <th>Process</th>  # <th>Process</th>
+                        </tr>  # </tr>
+                    </thead>  # </thead>
+                    <tbody id="connection-table-body">  # <tbody id="connection-table-body">
+                        <!-- Connection rows will be inserted here -->  # <!-- Connection rows will be inserted here -->
+                    </tbody>  # </tbody>
+                </table>  # </table>
+            </div>  # </div>
+        </div>  # </div>
+    </div>  # </div>
+
+    <!-- Disk I/O Read Process Modal -->  # <!-- Disk I/O Read Process Modal -->
+    <div id="io-read-modal" class="modal">  # <div id="io-read-modal" class="modal">
+        <div class="modal-content" style="top: 150px; left: 150px;">  # <div class="modal-content" style="top: 150px; left: 150px;">
+            <div class="modal-header">  # <div class="modal-header">
+                <h2 id="io-read-modal-title">Disk I/O (Read)</h2>  # <h2 id="io-read-modal-title">Disk I/O (Read)</h2>
+                <div class="modal-controls">  # <div class="modal-controls">
+                    <button class="modal-btn" onclick="toggleMinimize('io-read-modal')"><i  # <button class="modal-btn" onclick="toggleMinimize('io-read-modal')"><i
+                            class="fas fa-minus"></i></button>  # class="fas fa-minus"></i></button>
+                    <button class="modal-btn" onclick="toggleMaximize('io-read-modal')"><i  # <button class="modal-btn" onclick="toggleMaximize('io-read-modal')"><i
+                            class="far fa-square"></i></button>  # class="far fa-square"></i></button>
+                    <button class="modal-close" onclick="closeIOReadModal()">&times;</button>  # <button class="modal-close" onclick="closeIOReadModal()">&times;</button>
+                </div>  # </div>
+            </div>  # </div>
+            <div class="modal-body">  # <div class="modal-body">
+                <div class="table-responsive">  # <div class="table-responsive">
+                    <table class="connection-table">  # <table class="connection-table">
+                        <thead>  # <thead>
+                            <tr>  # <tr>
+                                <th>Process</th>  # <th>Process</th>
+                                <th>PID</th>  # <th>PID</th>
+                                <th>Read Bytes</th>  # <th>Read Bytes</th>
+                                <th>Read Ops</th>  # <th>Read Ops</th>
+                            </tr>  # </tr>
+                        </thead>  # </thead>
+                        <tbody id="io-read-table-body">  # <tbody id="io-read-table-body">
+                            <!-- Process rows will be inserted here -->  # <!-- Process rows will be inserted here -->
+                        </tbody>  # </tbody>
+                    </table>  # </table>
+                </div>  # </div>
+            </div>  # </div>
+        </div>  # </div>
+    </div>  # </div>
+
+    <!-- Disk I/O Write Process Modal -->  # <!-- Disk I/O Write Process Modal -->
+    <div id="io-write-modal" class="modal">  # <div id="io-write-modal" class="modal">
+        <div class="modal-content" style="top: 200px; left: 200px;">  # <div class="modal-content" style="top: 200px; left: 200px;">
+            <div class="modal-header">  # <div class="modal-header">
+                <h2 id="io-write-modal-title">Disk I/O (Write)</h2>  # <h2 id="io-write-modal-title">Disk I/O (Write)</h2>
+                <div class="modal-controls">  # <div class="modal-controls">
+                    <button class="modal-btn" onclick="toggleMinimize('io-write-modal')"><i  # <button class="modal-btn" onclick="toggleMinimize('io-write-modal')"><i
+                            class="fas fa-minus"></i></button>  # class="fas fa-minus"></i></button>
+                    <button class="modal-btn" onclick="toggleMaximize('io-write-modal')"><i  # <button class="modal-btn" onclick="toggleMaximize('io-write-modal')"><i
+                            class="far fa-square"></i></button>  # class="far fa-square"></i></button>
+                    <button class="modal-close" onclick="closeIOWriteModal()">&times;</button>  # <button class="modal-close" onclick="closeIOWriteModal()">&times;</button>
+                </div>  # </div>
+            </div>  # </div>
+            <div class="modal-body">  # <div class="modal-body">
+                <div class="table-responsive">  # <div class="table-responsive">
+                    <table class="connection-table">  # <table class="connection-table">
+                        <thead>  # <thead>
+                            <tr>  # <tr>
+                                <th>Process</th>  # <th>Process</th>
+                                <th>PID</th>  # <th>PID</th>
+                                <th>Write Bytes</th>  # <th>Write Bytes</th>
+                                <th>Write Ops</th>  # <th>Write Ops</th>
+                            </tr>  # </tr>
+                        </thead>  # </thead>
+                        <tbody id="io-write-table-body">  # <tbody id="io-write-table-body">
+                            <!-- Process rows will be inserted here -->  # <!-- Process rows will be inserted here -->
+                        </tbody>  # </tbody>
+                    </table>  # </table>
+                </div>  # </div>
+            </div>  # </div>
+        </div>  # </div>
+    </div>  # </div>
+
+    <!-- Disk Analysis Modal -->  # <!-- Disk Analysis Modal -->
+    <div id="disk-modal" class="modal">  # <div id="disk-modal" class="modal">
+        <div class="modal-content">  # <div class="modal-content">
+            <div class="modal-header">  # <div class="modal-header">
+                <h2 id="disk-modal-title">Disk Analysis</h2>  # <h2 id="disk-modal-title">Disk Analysis</h2>
+                <div class="modal-controls">  # <div class="modal-controls">
+                    <button class="modal-btn" onclick="toggleMinimize('disk-modal')"><i  # <button class="modal-btn" onclick="toggleMinimize('disk-modal')"><i
+                            class="fas fa-minus"></i></button>  # class="fas fa-minus"></i></button>
+                    <button class="modal-btn" onclick="toggleMaximize('disk-modal')"><i  # <button class="modal-btn" onclick="toggleMaximize('disk-modal')"><i
+                            class="far fa-square"></i></button>  # class="far fa-square"></i></button>
+                    <button class="modal-close" onclick="closeDiskModal()">&times;</button>  # <button class="modal-close" onclick="closeDiskModal()">&times;</button>
+                </div>  # </div>
+            </div>  # </div>
+            <div class="modal-body">  # <div class="modal-body">
+                <div id="disk-loading" style="text-align: center; padding: 2rem; display: none;">  # <div id="disk-loading" style="text-align: center; padding: 2rem; display: none;">
+                    <div class="spinner"></div>  # <div class="spinner"></div>
+                    <p>Analyzing disk usage... This may take a moment.</p>  # <p>Analyzing disk usage... This may take a moment.</p>
+                </div>  # </div>
+                <div id="disk-analysis-content">  # <div id="disk-analysis-content">
+                    <h4 style="margin-bottom: 1rem; color: var(--text-secondary);">Top Directories</h4>  # <h4 style="margin-bottom: 1rem; color: var(--text-secondary);">Top Directories</h4>
+                    <div id="directory-list" class="directory-list">  # <div id="directory-list" class="directory-list">
+                        <!-- Directory items will be inserted here -->  # <!-- Directory items will be inserted here -->
+                    </div>  # </div>
+                </div>  # </div>
+            </div>  # </div>
+        </div>  # </div>
+    </div>  # </div>
+
+</div>  # </div>
+
+<div id="config-data" data-refresh-interval="{{ preferences.refresh_interval if preferences else 2000 }}"  # <div id="config-data" data-refresh-interval="{{ preferences.refresh_interval if preferences else 2000 }}"
+    data-max-data-points="{{ preferences.chart_data_points if preferences else 60 }}"  # data-max-data-points="{{ preferences.chart_data_points if preferences else 60 }}"
+    data-server-id="{{ servers[0].id if servers else '' }}" style="display: none;">  # data-server-id="{{ servers[0].id if servers else '' }}" style="display: none;">
+</div>  # </div>
+
+<!-- Hidden widget templates for Gridstack to use -->  # <!-- Hidden widget templates for Gridstack to use -->
+<div id="widget-templates" style="display: none;">  # <div id="widget-templates" style="display: none;">
+    <div id="tpl-cpu">{{ cpu_widget('cpu-widget') }}</div>  # <div id="tpl-cpu">{{ cpu_widget('cpu-widget') }}</div>
+    <div id="tpl-memory">{{ memory_widget('memory-widget') }}</div>  # <div id="tpl-memory">{{ memory_widget('memory-widget') }}</div>
+    <div id="tpl-network">{{ network_widget('network-widget') }}</div>  # <div id="tpl-network">{{ network_widget('network-widget') }}</div>
+    <div id="tpl-io">{{ io_widget('io-widget') }}</div>  # <div id="tpl-io">{{ io_widget('io-widget') }}</div>
+    <div id="tpl-disk">{{ disk_widget('disk-widget') }}</div>  # <div id="tpl-disk">{{ disk_widget('disk-widget') }}</div>
+</div>  # </div>
+
+{% endblock %}  # {% endblock %}
+
+{% block extra_js %}  # {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>  # <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
+<script>  # <script>
+    // Configuration from data attributes  # // Configuration from data attributes
+    const configData = document.getElementById('config-data');  # const configData = document.getElementById('config-data');
+    const refreshInterval = parseInt(configData.dataset.refreshInterval) || 2000;  # const refreshInterval = parseInt(configData.dataset.refreshInterval) || 2000;
+    const maxDataPoints = parseInt(configData.dataset.maxDataPoints) || 60;  # const maxDataPoints = parseInt(configData.dataset.maxDataPoints) || 60;
+    let currentServerId = configData.dataset.serverId ? parseInt(configData.dataset.serverId) : null;  # let currentServerId = configData.dataset.serverId ? parseInt(configData.dataset.serverId) : null;
+
+    // Chart data storage  # // Chart data storage
+    const cpuData = [];  # const cpuData = [];
+    const memoryData = [];  # const memoryData = [];
+    const networkData = [];  # const networkData = [];
+    const labels = [];  # const labels = [];
+
+    let grid = null;  # let grid = null;
+    let cpuChart = null;  # let cpuChart = null;
+    let memoryChart = null;  # let memoryChart = null;
+    let networkChart = null;  # let networkChart = null;
+    // Default layout configuration  # // Default layout configuration
+    const defaultLayout = [  # const defaultLayout = [
+        { x: 0, y: 0, w: 4, h: 4, id: 'cpu', content: document.getElementById('tpl-cpu').innerHTML },  # { x: 0, y: 0, w: 4, h: 4, id: 'cpu', content: document.getElementById('tpl-cpu').innerHTML },
+        { x: 4, y: 0, w: 4, h: 4, id: 'memory', content: document.getElementById('tpl-memory').innerHTML },  # { x: 4, y: 0, w: 4, h: 4, id: 'memory', content: document.getElementById('tpl-memory').innerHTML },
+        { x: 8, y: 0, w: 4, h: 4, id: 'network', content: document.getElementById('tpl-network').innerHTML },  # { x: 8, y: 0, w: 4, h: 4, id: 'network', content: document.getElementById('tpl-network').innerHTML },
+        { x: 0, y: 4, w: 6, h: 4, id: 'io', content: document.getElementById('tpl-io').innerHTML },  # { x: 0, y: 4, w: 6, h: 4, id: 'io', content: document.getElementById('tpl-io').innerHTML },
+        { x: 6, y: 4, w: 6, h: 4, id: 'disk', content: document.getElementById('tpl-disk').innerHTML }  # { x: 6, y: 4, w: 6, h: 4, id: 'disk', content: document.getElementById('tpl-disk').innerHTML }
+    ];  # ];
+
+    document.addEventListener('DOMContentLoaded', async function () {  # document.addEventListener('DOMContentLoaded', async function () {
+        // Initialize Gridstack  # // Initialize Gridstack
+        grid = GridStack.init({  # grid = GridStack.init({
+            column: 12,  # column: 12,
+            cellHeight: 100,  # cellHeight: 100,
+            margin: 10,  # margin: 10,
+            animate: true,  # animate: true,
+            float: true  # float: true
+        });  # });
+
+        // Load saved layout or use default  # // Load saved layout or use default
+        await loadLayout();  # await loadLayout();
+
+        // Initialize charts after widgets are in DOM  # // Initialize charts after widgets are in DOM
+        initCharts();  # initCharts();
+
+        // Start updates  # // Start updates
+        updateMetrics();  # updateMetrics();
+        setInterval(updateMetrics, refreshInterval);  # setInterval(updateMetrics, refreshInterval);
+    });  # });
+
+    async function loadLayout() {  # async function loadLayout() {
+        try {  # try {
+            const response = await fetch('/api/dashboard/layout');  # const response = await fetch('/api/dashboard/layout');
+            const data = await response.json();  # const data = await response.json();
+
+            let layout = defaultLayout;  # let layout = defaultLayout;
+
+            if (data.layout_config) {  # if (data.layout_config) {
+                // Merge saved config with content templates  # // Merge saved config with content templates
+                layout = data.layout_config.map(item => {  # layout = data.layout_config.map(item => {
+                    const tplId = `tpl-${item.id}`;  # const tplId = `tpl-${item.id}`;
+                    const tpl = document.getElementById(tplId);  # const tpl = document.getElementById(tplId);
+                    return {  # return {
+                        ...item,  # ...item,
+                        content: tpl ? tpl.innerHTML : ''  # content: tpl ? tpl.innerHTML : ''
+                    };  # };
+                });  # });
+            }  # }
+
+            grid.load(layout);  # grid.load(layout);
+
+        } catch (error) {  # } catch (error) {
+            console.error('Error loading layout:', error);  # console.error('Error loading layout:', error);
+            grid.load(defaultLayout);  # grid.load(defaultLayout);
+        }  # }
+    }  # }
+
+    async function saveLayout() {  # async function saveLayout() {
+        const layout = grid.save(false); // false = don't save content, just structure  # const layout = grid.save(false); // false = don't save content, just structure
+        // Map back to simple IDs for storage  # // Map back to simple IDs for storage
+        const simplifiedLayout = layout.map(item => ({  # const simplifiedLayout = layout.map(item => ({
+            x: item.x,  # x: item.x,
+            y: item.y,  # y: item.y,
+            w: item.w,  # w: item.w,
+            h: item.h,  # h: item.h,
+            id: item.id || item.el.querySelector('.widget').dataset.widgetType  # id: item.id || item.el.querySelector('.widget').dataset.widgetType
+        }));  # }));
+
+        try {  # try {
+            const response = await fetch('/api/dashboard/layout', {  # const response = await fetch('/api/dashboard/layout', {
+                method: 'POST',  # method: 'POST',
+                headers: { 'Content-Type': 'application/json' },  # headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({  # body: JSON.stringify({
+                    name: 'My Layout',  # name: 'My Layout',
+                    layout_config: simplifiedLayout  # layout_config: simplifiedLayout
+                })  # })
+            });  # });
+
+            if (response.ok) {  # if (response.ok) {
+                // Show success feedback  # // Show success feedback
+                const btn = document.querySelector('button[onclick="saveLayout()"]');  # const btn = document.querySelector('button[onclick="saveLayout()"]');
+                const originalText = btn.innerHTML;  # const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Saved!';  # btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+                setTimeout(() => btn.innerHTML = originalText, 2000);  # setTimeout(() => btn.innerHTML = originalText, 2000);
+            }  # }
+        } catch (error) {  # } catch (error) {
+            console.error('Error saving layout:', error);  # console.error('Error saving layout:', error);
+            alert('Failed to save layout');  # alert('Failed to save layout');
+        }  # }
+    }  # }
+
+    function resetLayout() {  # function resetLayout() {
+        if (confirm('Reset to default layout?')) {  # if (confirm('Reset to default layout?')) {
+            grid.removeAll();  # grid.removeAll();
+            grid.load(defaultLayout);  # grid.load(defaultLayout);
+            // Re-init charts as DOM elements were recreated  # // Re-init charts as DOM elements were recreated
+            setTimeout(initCharts, 100);  # setTimeout(initCharts, 100);
+        }  # }
+    }  # }
+
+    function initCharts() {  # function initCharts() {
+        // CPU Chart  # // CPU Chart
+        const cpuCanvas = document.getElementById('cpu-widget-chart');  # const cpuCanvas = document.getElementById('cpu-widget-chart');
+        if (cpuCanvas) {  # if (cpuCanvas) {
+            if (cpuChart) cpuChart.destroy();  # if (cpuChart) cpuChart.destroy();
+            cpuChart = new Chart(cpuCanvas, {  # cpuChart = new Chart(cpuCanvas, {
+                type: 'line',  # type: 'line',
+                data: {  # data: {
+                    labels: labels,  # labels: labels,
+                    datasets: [{  # datasets: [{
+                        label: 'CPU %',  # label: 'CPU %',
+                        data: cpuData,  # data: cpuData,
+                        borderColor: 'rgba(56, 189, 248, 1)',  # borderColor: 'rgba(56, 189, 248, 1)',
+                        backgroundColor: 'rgba(56, 189, 248, 0.1)',  # backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                        tension: 0.4,  # tension: 0.4,
+                        fill: true  # fill: true
+                    }]  # }]
+                },  # },
+                options: {  # options: {
+                    responsive: true,  # responsive: true,
+                    maintainAspectRatio: false,  # maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },  # plugins: { legend: { display: false } },
+                    scales: {  # scales: {
+                        y: { beginAtZero: true, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } },  # y: { beginAtZero: true, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                        x: { display: false }  # x: { display: false }
+                    }  # }
+                }  # }
+            });  # });
+        }  # }
+        // Memory Chart  # // Memory Chart
+        const memCanvas = document.getElementById('memory-widget-chart');  # const memCanvas = document.getElementById('memory-widget-chart');
+        if (memCanvas) {  # if (memCanvas) {
+            if (memoryChart) memoryChart.destroy();  # if (memoryChart) memoryChart.destroy();
+            memoryChart = new Chart(memCanvas, {  # memoryChart = new Chart(memCanvas, {
+                type: 'line',  # type: 'line',
+                data: {  # data: {
+                    labels: labels,  # labels: labels,
+                    datasets: [{  # datasets: [{
+                        label: 'Memory %',  # label: 'Memory %',
+                        data: memoryData,  # data: memoryData,
+                        borderColor: 'rgba(168, 85, 247, 1)',  # borderColor: 'rgba(168, 85, 247, 1)',
+                        backgroundColor: 'rgba(168, 85, 247, 0.1)',  # backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                        tension: 0.4,  # tension: 0.4,
+                        fill: true  # fill: true
+                    }]  # }]
+                },  # },
+                options: {  # options: {
+                    responsive: true,  # responsive: true,
+                    maintainAspectRatio: false,  # maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },  # plugins: { legend: { display: false } },
+                    scales: {  # scales: {
+                        y: { beginAtZero: true, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } },  # y: { beginAtZero: true, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                        x: { display: false }  # x: { display: false }
+                    }  # }
+                }  # }
+            });  # });
+        }  # }
+        // Network Chart  # // Network Chart
+        const netCanvas = document.getElementById('network-widget-chart');  # const netCanvas = document.getElementById('network-widget-chart');
+        if (netCanvas) {  # if (netCanvas) {
+            if (networkChart) networkChart.destroy();  # if (networkChart) networkChart.destroy();
+            networkChart = new Chart(netCanvas, {  # networkChart = new Chart(netCanvas, {
+                type: 'line',  # type: 'line',
+                data: {  # data: {
+                    labels: labels,  # labels: labels,
+                    datasets: [{  # datasets: [{
+                        label: 'Network Sent (bytes)',  # label: 'Network Sent (bytes)',
+                        data: networkData,  # data: networkData,
+                        borderColor: 'rgba(255, 99, 132, 1)',  # borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',  # backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        tension: 0.4,  # tension: 0.4,
+                        fill: true  # fill: true
+                    }]  # }]
+                },  # },
+                options: {  # options: {
+                    responsive: true,  # responsive: true,
+                    maintainAspectRatio: false,  # maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },  # plugins: { legend: { display: false } },
+                    scales: {  # scales: {
+                        y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } },  # y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                        x: { display: false }  # x: { display: false }
+                    }  # }
+                }  # }
+            });  # });
+        }  # }
+
+    }  # }
+
+    // Server selection  # // Server selection
+    const serverSelect = document.getElementById('serverSelect');  # const serverSelect = document.getElementById('serverSelect');
+    if (serverSelect) {  # if (serverSelect) {
+        serverSelect.addEventListener('change', (e) => {  # serverSelect.addEventListener('change', (e) => {
+            currentServerId = parseInt(e.target.value);  # currentServerId = parseInt(e.target.value);
+            updateMetrics();  # updateMetrics();
+        });  # });
+    }  # }
+
+    // Fetch and update metrics  # // Fetch and update metrics
+    async function updateMetrics() {  # async function updateMetrics() {
+        try {  # try {
+            const url = currentServerId ? `/api/metrics?server_id=${currentServerId}` : '/api/metrics';  # const url = currentServerId ? `/api/metrics?server_id=${currentServerId}` : '/api/metrics';
+            const response = await fetch(url);  # const response = await fetch(url);
+            const data = await response.json();  # const data = await response.json();
+
+            // Update CPU  # // Update CPU
+            updateText('cpu-widget-percent', data.cpu.percent.toFixed(1));  # updateText('cpu-widget-percent', data.cpu.percent.toFixed(1));
+            updateText('cpu-widget-freq', data.cpu.freq);  # updateText('cpu-widget-freq', data.cpu.freq);
+            if (data.cpu.temp_c) {  # if (data.cpu.temp_c) {
+                updateText('cpu-widget-temp', `${data.cpu.temp_c.toFixed(1)}°C / ${data.cpu.temp_f.toFixed(1)}°F`);  # updateText('cpu-widget-temp', `${data.cpu.temp_c.toFixed(1)}°C / ${data.cpu.temp_f.toFixed(1)}°F`);
+            }  # }
+
+            // Update Memory  # // Update Memory
+            updateText('memory-widget-percent', data.memory.percent.toFixed(1));  # updateText('memory-widget-percent', data.memory.percent.toFixed(1));
+            updateText('memory-widget-used', data.memory.used);  # updateText('memory-widget-used', data.memory.used);
+            updateText('memory-widget-total', data.memory.total);  # updateText('memory-widget-total', data.memory.total);
+
+            // Update Network  # // Update Network
+            if (data.network) {  # if (data.network) {
+                updateText('network-widget-sent', data.network.bytes_sent);  # updateText('network-widget-sent', data.network.bytes_sent);
+                updateText('network-widget-recv', data.network.bytes_recv);  # updateText('network-widget-recv', data.network.bytes_recv);
+                // Push to network chart data  # // Push to network chart data
+                networkData.push(data.network.bytes_sent_raw);  # networkData.push(data.network.bytes_sent_raw);
+            }  # }
+            if (data.connections) {  # if (data.connections) {
+                updateText('network-widget-connections', data.connections.total);  # updateText('network-widget-connections', data.connections.total);
+                updateText('network-widget-established', data.connections.established);  # updateText('network-widget-established', data.connections.established);
+            }  # }
+
+            // Update Disk I/O  # // Update Disk I/O
+            updateText('io-widget-read', data.io.read_bytes);  # updateText('io-widget-read', data.io.read_bytes);
+            updateText('io-widget-write', data.io.write_bytes);  # updateText('io-widget-write', data.io.write_bytes);
+            updateText('io-widget-read-count', `${data.io.read_count.toLocaleString()} ops`);  # updateText('io-widget-read-count', `${data.io.read_count.toLocaleString()} ops`);
+            updateText('io-widget-write-count', `${data.io.write_count.toLocaleString()} ops`);  # updateText('io-widget-write-count', `${data.io.write_count.toLocaleString()} ops`);
+
+            // Update Disk Usage  # // Update Disk Usage
+            const diskList = document.getElementById('disk-widget-list');  # const diskList = document.getElementById('disk-widget-list');
+            if (diskList) {  # if (diskList) {
+                diskList.innerHTML = '';  # diskList.innerHTML = '';
+                data.disk.forEach(disk => {  # data.disk.forEach(disk => {
+                    const diskItem = document.createElement('div');  # const diskItem = document.createElement('div');
+                    diskItem.className = 'disk-item clickable-disk-item';  # diskItem.className = 'disk-item clickable-disk-item';
+                    diskItem.onclick = () => showDiskAnalysis(disk.mountpoint);  # diskItem.onclick = () => showDiskAnalysis(disk.mountpoint);
+                    diskItem.title = 'Click to analyze disk space usage';  # diskItem.title = 'Click to analyze disk space usage';
+                    diskItem.innerHTML = `  # diskItem.innerHTML = `
+                        <div class="disk-header">  # <div class="disk-header">
+                            <span><strong>${disk.device}</strong> (${disk.mountpoint})</span>  # <span><strong>${disk.device}</strong> (${disk.mountpoint})</span>
+                            <span>${disk.used} / ${disk.total} (${disk.percent.toFixed(1)}%)</span>  # <span>${disk.used} / ${disk.total} (${disk.percent.toFixed(1)}%)</span>
+                        </div>  # </div>
+                        <div class="disk-bar-bg">  # <div class="disk-bar-bg">
+                            <div class="disk-bar-fill" style="width: ${disk.percent}%"></div>  # <div class="disk-bar-fill" style="width: ${disk.percent}%"></div>
+                        </div>  # </div>
+                    `;  # `;
+                    diskList.appendChild(diskItem);  # diskList.appendChild(diskItem);
+                });  # });
+            }  # }
+
+            // Update charts  # // Update charts
+            const now = new Date().toLocaleTimeString();  # const now = new Date().toLocaleTimeString();
+            labels.push(now);  # labels.push(now);
+            cpuData.push(data.cpu.percent);  # cpuData.push(data.cpu.percent);
+            memoryData.push(data.memory.percent);  # memoryData.push(data.memory.percent);
+
+            if (labels.length > maxDataPoints) {  # if (labels.length > maxDataPoints) {
+                labels.shift();  # labels.shift();
+                cpuData.shift();  # cpuData.shift();
+                memoryData.shift();  # memoryData.shift();
+                networkData.shift();  # networkData.shift();
+            }  # }
+
+            if (cpuChart) cpuChart.update('none');  # if (cpuChart) cpuChart.update('none');
+            if (memoryChart) memoryChart.update('none');  # if (memoryChart) memoryChart.update('none');
+            if (networkChart) networkChart.update('none');  # if (networkChart) networkChart.update('none');
+        } catch (error) {  # } catch (error) {
+            console.error('Error fetching metrics:', error);  # console.error('Error fetching metrics:', error);
+        }  # }
+    }  # }
+
+    function updateText(id, value) {  # function updateText(id, value) {
+        const el = document.getElementById(id);  # const el = document.getElementById(id);
+        if (el) el.textContent = value;  # if (el) el.textContent = value;
+    }  # }
+
+    // Network Connection Details Modal  # // Network Connection Details Modal
+    async function showConnectionDetails(status) {  # async function showConnectionDetails(status) {
+        try {  # try {
+            const url = status === 'all'  # const url = status === 'all'
+                ? '/api/network/connections'  # ? '/api/network/connections'
+                : `/api/network/connections?status=${status}`;  # : `/api/network/connections?status=${status}`;
+
+            const response = await fetch(url);  # const response = await fetch(url);
+            const data = await response.json();  # const data = await response.json();
+
+            if (data.error) {  # if (data.error) {
+                alert(`Error: ${data.error}`);  # alert(`Error: ${data.error}`);
+                return;  # return;
+            }  # }
+
+            // Populate modal with connection data  # // Populate modal with connection data
+            const tableBody = document.getElementById('connection-table-body');  # const tableBody = document.getElementById('connection-table-body');
+            tableBody.innerHTML = '';  # tableBody.innerHTML = '';
+
+            if (data.connections.length === 0) {  # if (data.connections.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">No connections found</td></tr>';  # tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">No connections found</td></tr>';
+            } else {  # } else {
+                data.connections.forEach(conn => {  # data.connections.forEach(conn => {
+                    const row = document.createElement('tr');  # const row = document.createElement('tr');
+                    row.innerHTML = `  # row.innerHTML = `
+                        <td>${conn.protocol}</td>  # <td>${conn.protocol}</td>
+                        <td>${conn.local_address}</td>  # <td>${conn.local_address}</td>
+                        <td>${conn.remote_address}</td>  # <td>${conn.remote_address}</td>
+                        <td><span class="status-badge status-${conn.status.toLowerCase()}">${conn.status}</span></td>  # <td><span class="status-badge status-${conn.status.toLowerCase()}">${conn.status}</span></td>
+                        <td>${conn.pid}</td>  # <td>${conn.pid}</td>
+                        <td>${conn.process}</td>  # <td>${conn.process}</td>
+                    `;  # `;
+                    tableBody.appendChild(row);  # tableBody.appendChild(row);
+                });  # });
+            }  # }
+
+            // Update modal title  # // Update modal title
+            const modalTitle = document.getElementById('connection-modal-title');  # const modalTitle = document.getElementById('connection-modal-title');
+            modalTitle.textContent = status === 'all'  # modalTitle.textContent = status === 'all'
+                ? `All Network Connections (${data.count})`  # ? `All Network Connections (${data.count})`
+                : `Established Connections (${data.count})`;  # : `Established Connections (${data.count})`;
+
+            // Show modal  # // Show modal
+            const modal = document.getElementById('connection-modal');  # const modal = document.getElementById('connection-modal');
+            modal.style.display = 'flex';  # modal.style.display = 'flex';
+            bringToFront('connection-modal');  # bringToFront('connection-modal');
+        } catch (error) {  # } catch (error) {
+            console.error('Error fetching connection details:', error);  # console.error('Error fetching connection details:', error);
+            alert('Failed to fetch connection details');  # alert('Failed to fetch connection details');
+        }  # }
+    }  # }
+
+    function closeConnectionModal() {  # function closeConnectionModal() {
+        document.getElementById('connection-modal').style.display = 'none';  # document.getElementById('connection-modal').style.display = 'none';
+    }  # }
+
+    // CPU Details  # // CPU Details
+    async function showCPUDetails() {  # async function showCPUDetails() {
+        const modal = document.getElementById('cpu-modal');  # const modal = document.getElementById('cpu-modal');
+        const tbody = document.getElementById('cpu-table-body');  # const tbody = document.getElementById('cpu-table-body');
+
+        modal.style.display = 'block';  # modal.style.display = 'block';
+        bringToFront('cpu-modal');  # bringToFront('cpu-modal');
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Loading...</td></tr>';  # tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Loading...</td></tr>';
+
+        try {  # try {
+            const response = await fetch('/api/processes?sort=cpu');  # const response = await fetch('/api/processes?sort=cpu');
+            const data = await response.json();  # const data = await response.json();
+
+            tbody.innerHTML = '';  # tbody.innerHTML = '';
+
+            if (data.processes && data.processes.length > 0) {  # if (data.processes && data.processes.length > 0) {
+                // Take top 20  # // Take top 20
+                data.processes.slice(0, 20).forEach(proc => {  # data.processes.slice(0, 20).forEach(proc => {
+                    const row = document.createElement('tr');  # const row = document.createElement('tr');
+                    row.innerHTML = `  # row.innerHTML = `
+                        <td><span class="process-name">${proc.name}</span></td>  # <td><span class="process-name">${proc.name}</span></td>
+                        <td>${proc.pid}</td>  # <td>${proc.pid}</td>
+                        <td>${proc.username}</td>  # <td>${proc.username}</td>
+                        <td>${proc.cpu_percent.toFixed(1)}%</td>  # <td>${proc.cpu_percent.toFixed(1)}%</td>
+                        <td>${proc.memory_percent.toFixed(1)}%</td>  # <td>${proc.memory_percent.toFixed(1)}%</td>
+                    `;  # `;
+                    tbody.appendChild(row);  # tbody.appendChild(row);
+                });  # });
+            } else {  # } else {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No processes found</td></tr>';  # tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No processes found</td></tr>';
+            }  # }
+        } catch (error) {  # } catch (error) {
+            console.error('Error fetching CPU details:', error);  # console.error('Error fetching CPU details:', error);
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Error loading data</td></tr>';  # tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Error loading data</td></tr>';
+        }  # }
+    }  # }
+
+    function closeCPUModal() {  # function closeCPUModal() {
+        document.getElementById('cpu-modal').style.display = 'none';  # document.getElementById('cpu-modal').style.display = 'none';
+    }  # }
+
+    // Memory Details  # // Memory Details
+    async function showMemoryDetails() {  # async function showMemoryDetails() {
+        const modal = document.getElementById('memory-modal');  # const modal = document.getElementById('memory-modal');
+        const tbody = document.getElementById('memory-table-body');  # const tbody = document.getElementById('memory-table-body');
+
+        modal.style.display = 'block';  # modal.style.display = 'block';
+        bringToFront('memory-modal');  # bringToFront('memory-modal');
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Loading...</td></tr>';  # tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Loading...</td></tr>';
+
+        try {  # try {
+            const response = await fetch('/api/processes?sort=memory');  # const response = await fetch('/api/processes?sort=memory');
+            const data = await response.json();  # const data = await response.json();
+
+            tbody.innerHTML = '';  # tbody.innerHTML = '';
+
+            if (data.processes && data.processes.length > 0) {  # if (data.processes && data.processes.length > 0) {
+                // Take top 20  # // Take top 20
+                data.processes.slice(0, 20).forEach(proc => {  # data.processes.slice(0, 20).forEach(proc => {
+                    const row = document.createElement('tr');  # const row = document.createElement('tr');
+                    row.innerHTML = `  # row.innerHTML = `
+                        <td><span class="process-name">${proc.name}</span></td>  # <td><span class="process-name">${proc.name}</span></td>
+                        <td>${proc.pid}</td>  # <td>${proc.pid}</td>
+                        <td>${proc.username}</td>  # <td>${proc.username}</td>
+                        <td>${proc.memory_percent.toFixed(1)}%</td>  # <td>${proc.memory_percent.toFixed(1)}%</td>
+                        <td>${proc.cpu_percent.toFixed(1)}%</td>  # <td>${proc.cpu_percent.toFixed(1)}%</td>
+                    `;  # `;
+                    tbody.appendChild(row);  # tbody.appendChild(row);
+                });  # });
+            } else {  # } else {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No processes found</td></tr>';  # tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No processes found</td></tr>';
+            }  # }
+        } catch (error) {  # } catch (error) {
+            console.error('Error fetching Memory details:', error);  # console.error('Error fetching Memory details:', error);
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Error loading data</td></tr>';  # tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Error loading data</td></tr>';
+        }  # }
+    }  # }
+
+    function closeMemoryModal() {  # function closeMemoryModal() {
+        document.getElementById('memory-modal').style.display = 'none';  # document.getElementById('memory-modal').style.display = 'none';
+    }  # }
+
+    // Close modal when clicking outside - REMOVED for modeless windows  # // Close modal when clicking outside - REMOVED for modeless windows
+    // Windows are now closed via the close button only  # // Windows are now closed via the close button only
+    /*  # /*
+    window.onclick = function (event) {  # window.onclick = function (event) {
+        const modal = document.getElementById('connection-modal');  # const modal = document.getElementById('connection-modal');
+        if (event.target == modal) {  # if (event.target == modal) {
+            closeConnectionModal();  # closeConnectionModal();
+        }  # }
+        // ... other modals  # // ... other modals
+    }  # }
+    */  # */
+
+    // Disk I/O Process Details  # // Disk I/O Process Details
+    async function showIOReadProcessDetails() {  # async function showIOReadProcessDetails() {
+        const modal = document.getElementById('io-read-modal');  # const modal = document.getElementById('io-read-modal');
+        const tbody = document.getElementById('io-read-table-body');  # const tbody = document.getElementById('io-read-table-body');
+
+        // Show modal immediately  # // Show modal immediately
+        modal.style.display = 'block';  # modal.style.display = 'block';
+        bringToFront('io-read-modal');  # bringToFront('io-read-modal');
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Loading...</td></tr>';  # tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Loading...</td></tr>';
+
+        try {  # try {
+            const response = await fetch('/api/disk/io-processes?sort=read');  # const response = await fetch('/api/disk/io-processes?sort=read');
+            const data = await response.json();  # const data = await response.json();
+
+            tbody.innerHTML = '';  # tbody.innerHTML = '';
+
+            if (data.processes && data.processes.length > 0) {  # if (data.processes && data.processes.length > 0) {
+                data.processes.forEach(proc => {  # data.processes.forEach(proc => {
+                    const row = document.createElement('tr');  # const row = document.createElement('tr');
+                    row.innerHTML = `  # row.innerHTML = `
+                        <td><span class="process-name">${proc.name}</span></td>  # <td><span class="process-name">${proc.name}</span></td>
+                        <td>${proc.pid}</td>  # <td>${proc.pid}</td>
+                        <td>${proc.read_bytes_formatted}</td>  # <td>${proc.read_bytes_formatted}</td>
+                        <td>${proc.read_count}</td>  # <td>${proc.read_count}</td>
+                    `;  # `;
+                    tbody.appendChild(row);  # tbody.appendChild(row);
+                });  # });
+            } else {  # } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No active read processes found</td></tr>';  # tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No active read processes found</td></tr>';
+            }  # }
+        } catch (error) {  # } catch (error) {
+            console.error('Error fetching I/O details:', error);  # console.error('Error fetching I/O details:', error);
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--danger);">Error loading data</td></tr>';  # tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--danger);">Error loading data</td></tr>';
+        }  # }
+    }  # }
+
+    async function showIOWriteProcessDetails() {  # async function showIOWriteProcessDetails() {
+        const modal = document.getElementById('io-write-modal');  # const modal = document.getElementById('io-write-modal');
+        const tbody = document.getElementById('io-write-table-body');  # const tbody = document.getElementById('io-write-table-body');
+
+        // Show modal immediately  # // Show modal immediately
+        modal.style.display = 'block';  # modal.style.display = 'block';
+        bringToFront('io-write-modal');  # bringToFront('io-write-modal');
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Loading...</td></tr>';  # tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Loading...</td></tr>';
+
+        try {  # try {
+            const response = await fetch('/api/disk/io-processes?sort=write');  # const response = await fetch('/api/disk/io-processes?sort=write');
+            const data = await response.json();  # const data = await response.json();
+
+            tbody.innerHTML = '';  # tbody.innerHTML = '';
+
+            if (data.processes && data.processes.length > 0) {  # if (data.processes && data.processes.length > 0) {
+                data.processes.forEach(proc => {  # data.processes.forEach(proc => {
+                    const row = document.createElement('tr');  # const row = document.createElement('tr');
+                    row.innerHTML = `  # row.innerHTML = `
+                        <td><span class="process-name">${proc.name}</span></td>  # <td><span class="process-name">${proc.name}</span></td>
+                        <td>${proc.pid}</td>  # <td>${proc.pid}</td>
+                        <td>${proc.write_bytes_formatted}</td>  # <td>${proc.write_bytes_formatted}</td>
+                        <td>${proc.write_count}</td>  # <td>${proc.write_count}</td>
+                    `;  # `;
+                    tbody.appendChild(row);  # tbody.appendChild(row);
+                });  # });
+            } else {  # } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No active write processes found</td></tr>';  # tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No active write processes found</td></tr>';
+            }  # }
+        } catch (error) {  # } catch (error) {
+            console.error('Error fetching I/O details:', error);  # console.error('Error fetching I/O details:', error);
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--danger);">Error loading data</td></tr>';  # tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--danger);">Error loading data</td></tr>';
+        }  # }
+    }  # }
+
+    function closeIOReadModal() {  # function closeIOReadModal() {
+        document.getElementById('io-read-modal').style.display = 'none';  # document.getElementById('io-read-modal').style.display = 'none';
+    }  # }
+
+    function closeIOWriteModal() {  # function closeIOWriteModal() {
+        document.getElementById('io-write-modal').style.display = 'none';  # document.getElementById('io-write-modal').style.display = 'none';
+    }  # }
+
+    // Disk Analysis  # // Disk Analysis
+    async function showDiskAnalysis(mountpoint) {  # async function showDiskAnalysis(mountpoint) {
+        const modal = document.getElementById('disk-modal');  # const modal = document.getElementById('disk-modal');
+        const loading = document.getElementById('disk-loading');  # const loading = document.getElementById('disk-loading');
+        const content = document.getElementById('disk-analysis-content');  # const content = document.getElementById('disk-analysis-content');
+        const list = document.getElementById('directory-list');  # const list = document.getElementById('directory-list');
+        const title = document.getElementById('disk-modal-title');  # const title = document.getElementById('disk-modal-title');
+
+        title.textContent = `Disk Analysis: ${mountpoint}`;  # title.textContent = `Disk Analysis: ${mountpoint}`;
+        modal.style.display = 'block';  # modal.style.display = 'block';
+        bringToFront('disk-modal');  # bringToFront('disk-modal');
+        loading.style.display = 'block';  # loading.style.display = 'block';
+        content.style.display = 'none';  # content.style.display = 'none';
+        list.innerHTML = '';  # list.innerHTML = '';
+
+        try {  # try {
+            const response = await fetch(`/api/disk/analyze?mountpoint=${encodeURIComponent(mountpoint)}`);  # const response = await fetch(`/api/disk/analyze?mountpoint=${encodeURIComponent(mountpoint)}`);
+            const data = await response.json();  # const data = await response.json();
+
+            loading.style.display = 'none';  # loading.style.display = 'none';
+            content.style.display = 'block';  # content.style.display = 'block';
+
+            if (data.directories && data.directories.length > 0) {  # if (data.directories && data.directories.length > 0) {
+                // Find max size for progress bars  # // Find max size for progress bars
+                const maxSize = data.directories[0].size;  # const maxSize = data.directories[0].size;
+
+                data.directories.forEach(dir => {  # data.directories.forEach(dir => {
+                    const percent = (dir.size / maxSize) * 100;  # const percent = (dir.size / maxSize) * 100;
+                    const item = document.createElement('div');  # const item = document.createElement('div');
+                    item.className = 'directory-item';  # item.className = 'directory-item';
+                    item.innerHTML = `  # item.innerHTML = `
+                        <div class="directory-info">  # <div class="directory-info">
+                            <span class="directory-path" title="${dir.path}">${dir.path}</span>  # <span class="directory-path" title="${dir.path}">${dir.path}</span>
+                            <span class="directory-size">${dir.size_formatted}</span>  # <span class="directory-size">${dir.size_formatted}</span>
+                        </div>  # </div>
+                        <div class="directory-bar-bg">  # <div class="directory-bar-bg">
+                            <div class="directory-bar-fill" style="width: ${percent}%"></div>  # <div class="directory-bar-fill" style="width: ${percent}%"></div>
+                        </div>  # </div>
+                        <div class="directory-meta">  # <div class="directory-meta">
+                            ${dir.file_count.toLocaleString()} files  # ${dir.file_count.toLocaleString()} files
+                        </div>  # </div>
+                    `;  # `;
+                    list.appendChild(item);  # list.appendChild(item);
+                });  # });
+            } else {  # } else {
+                list.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No directories found or permission denied</p>';  # list.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No directories found or permission denied</p>';
+            }  # }
+        } catch (error) {  # } catch (error) {
+            console.error('Error analyzing disk:', error);  # console.error('Error analyzing disk:', error);
+            loading.style.display = 'none';  # loading.style.display = 'none';
+            content.style.display = 'block';  # content.style.display = 'block';
+            list.innerHTML = '<p style="text-align: center; color: var(--danger);">Error analyzing disk usage</p>';  # list.innerHTML = '<p style="text-align: center; color: var(--danger);">Error analyzing disk usage</p>';
+        }  # }
+    }  # }
+
+    function closeDiskModal() {  # function closeDiskModal() {
+        document.getElementById('disk-modal').style.display = 'none';  # document.getElementById('disk-modal').style.display = 'none';
+    }  # }
+
+    // Modal State Management (Maximize/Minimize)  # // Modal State Management (Maximize/Minimize)
+    const modalStates = {};  # const modalStates = {};
+
+    function toggleMaximize(modalId) {  # function toggleMaximize(modalId) {
+        const modal = document.getElementById(modalId);  # const modal = document.getElementById(modalId);
+        const content = modal.querySelector('.modal-content');  # const content = modal.querySelector('.modal-content');
+        const icon = modal.querySelector('button[onclick^="toggleMaximize"] i');  # const icon = modal.querySelector('button[onclick^="toggleMaximize"] i');
+
+        if (content.classList.contains('maximized')) {  # if (content.classList.contains('maximized')) {
+            // Restore  # // Restore
+            content.classList.remove('maximized');  # content.classList.remove('maximized');
+            icon.classList.remove('fa-window-restore');  # icon.classList.remove('fa-window-restore');
+            icon.classList.add('fa-square');  # icon.classList.add('fa-square');
+            icon.classList.add('far'); // Regular square  # icon.classList.add('far'); // Regular square
+            icon.classList.remove('fas'); // Solid restore icon  # icon.classList.remove('fas'); // Solid restore icon
+
+            // Restore position/size if interact.js modified it, or let CSS handle it  # // Restore position/size if interact.js modified it, or let CSS handle it
+            // For simplicity, we rely on removing the class to revert to CSS defaults or previous interact state  # // For simplicity, we rely on removing the class to revert to CSS defaults or previous interact state
+            // However, interact.js sets inline styles. We might need to clear them or restore them.  # // However, interact.js sets inline styles. We might need to clear them or restore them.
+            // A simple approach: clear inline styles related to size/pos when maximizing, restore them when un-maximizing?  # // A simple approach: clear inline styles related to size/pos when maximizing, restore them when un-maximizing?
+            // Better: Just toggle the class. The class should use !important to override inline styles.  # // Better: Just toggle the class. The class should use !important to override inline styles.
+        } else {  # } else {
+            // Maximize  # // Maximize
+            content.classList.remove('minimized'); // Ensure not minimized  # content.classList.remove('minimized'); // Ensure not minimized
+            content.classList.add('maximized');  # content.classList.add('maximized');
+            icon.classList.remove('fa-square');  # icon.classList.remove('fa-square');
+            icon.classList.remove('far');  # icon.classList.remove('far');
+            icon.classList.add('fa-window-restore');  # icon.classList.add('fa-window-restore');
+            icon.classList.add('fas');  # icon.classList.add('fas');
+        }  # }
+        bringToFront(modalId);  # bringToFront(modalId);
+    }  # }
+
+    function toggleMinimize(modalId) {  # function toggleMinimize(modalId) {
+        const modal = document.getElementById(modalId);  # const modal = document.getElementById(modalId);
+        const content = modal.querySelector('.modal-content');  # const content = modal.querySelector('.modal-content');
+
+        if (content.classList.contains('minimized')) {  # if (content.classList.contains('minimized')) {
+            // Restore  # // Restore
+            content.classList.remove('minimized');  # content.classList.remove('minimized');
+            bringToFront(modalId);  # bringToFront(modalId);
+        } else {  # } else {
+            // Minimize  # // Minimize
+            content.classList.remove('maximized'); // Ensure not maximized  # content.classList.remove('maximized'); // Ensure not maximized
+            content.classList.add('minimized');  # content.classList.add('minimized');
+        }  # }
+    }  # }
+
+    // Z-Index Management for Multi-Window Support  # // Z-Index Management for Multi-Window Support
+    let highestZIndex = 2000;  # let highestZIndex = 2000;
+
+    function bringToFront(modalId) {  # function bringToFront(modalId) {
+        const modal = document.getElementById(modalId);  # const modal = document.getElementById(modalId);
+        // We need to target the .modal-content since the .modal wrapper has pointer-events: none  # // We need to target the .modal-content since the .modal wrapper has pointer-events: none
+        // But wait, the .modal wrapper is what we usually toggle display on.  # // But wait, the .modal wrapper is what we usually toggle display on.
+        // Actually, for modeless, we might want to apply z-index to the wrapper if they are separate wrappers?  # // Actually, for modeless, we might want to apply z-index to the wrapper if they are separate wrappers?
+        // In this app, each modal has its own wrapper: <div id="connection-modal" class="modal">...</div>  # // In this app, each modal has its own wrapper: <div id="connection-modal" class="modal">...</div>
+        // So we should increase z-index of the wrapper?  # // So we should increase z-index of the wrapper?
+        // BUT, the wrapper is fixed full screen with pointer-events: none.  # // BUT, the wrapper is fixed full screen with pointer-events: none.
+        // The content is what matters.  # // The content is what matters.
+        // Let's check style.css: .modal { z-index: 2000; }  # // Let's check style.css: .modal { z-index: 2000; }
+        // If we have multiple .modal wrappers, they stack.  # // If we have multiple .modal wrappers, they stack.
+        // If we want them to reorder, we must change z-index of the .modal wrapper.  # // If we want them to reorder, we must change z-index of the .modal wrapper.
+
+        highestZIndex++;  # highestZIndex++;
+        modal.style.zIndex = highestZIndex;  # modal.style.zIndex = highestZIndex;
+
+        // Visual Distinction: Remove active class from all, add to current  # // Visual Distinction: Remove active class from all, add to current
+        document.querySelectorAll('.modal-content').forEach(el => {  # document.querySelectorAll('.modal-content').forEach(el => {
+            el.classList.remove('active');  # el.classList.remove('active');
+        });  # });
+
+        const content = modal.querySelector('.modal-content');  # const content = modal.querySelector('.modal-content');
+        if (content) {  # if (content) {
+            content.classList.add('active');  # content.classList.add('active');
+        }  # }
+    }  # }
+
+    // Add mousedown listeners to all modal contents to bring to front on click  # // Add mousedown listeners to all modal contents to bring to front on click
+    document.addEventListener('DOMContentLoaded', () => {  # document.addEventListener('DOMContentLoaded', () => {
+        const modals = document.querySelectorAll('.modal');  # const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {  # modals.forEach(modal => {
+            const content = modal.querySelector('.modal-content');  # const content = modal.querySelector('.modal-content');
+            if (content) {  # if (content) {
+                content.addEventListener('mousedown', () => {  # content.addEventListener('mousedown', () => {
+                    bringToFront(modal.id);  # bringToFront(modal.id);
+                });  # });
+            }  # }
+        });  # });
+    });  # });
+
+</script>  # </script>
+{% endblock %}  # {% endblock %}

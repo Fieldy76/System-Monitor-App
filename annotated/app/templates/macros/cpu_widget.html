@@ -1,21 +1,22 @@
-{% macro cpu_widget(widget_id='cpu-widget') %}  <!-- {% macro cpu_widget(widget_id='cpu-widget') %} -->
-<div class="card cpu-card widget" data-widget-id="{{ widget_id }}" data-widget-type="cpu">  <!-- <div class="card cpu-card widget" data-widget-id="{{ widget_id }}" data-widget-type="cpu"> -->
-    <h2>CPU</h2>  <!-- <h2>CPU</h2> -->
-    <div class="metric-large">  <!-- <div class="metric-large"> -->
-        <span id="{{ widget_id }}-percent">0</span><span class="unit">%</span>  <!-- <span id="{{ widget_id }}-percent">0</span><span class="unit">%</span> -->
-    </div>  <!-- </div> -->
-    <div class="sub-metrics">  <!-- <div class="sub-metrics"> -->
-        <div class="sub-metric">  <!-- <div class="sub-metric"> -->
-            <span class="label">Frequency</span>  <!-- <span class="label">Frequency</span> -->
-            <span class="value" id="{{ widget_id }}-freq">0 Mhz</span>  <!-- <span class="value" id="{{ widget_id }}-freq">0 Mhz</span> -->
-        </div>  <!-- </div> -->
-        <div class="sub-metric">  <!-- <div class="sub-metric"> -->
-            <span class="label">Temperature</span>  <!-- <span class="label">Temperature</span> -->
-            <span class="value" id="{{ widget_id }}-temp">N/A</span>  <!-- <span class="value" id="{{ widget_id }}-temp">N/A</span> -->
-        </div>  <!-- </div> -->
-    </div>  <!-- </div> -->
-    <div class="chart-container">  <!-- <div class="chart-container"> -->
-        <canvas id="{{ widget_id }}-chart"></canvas>  <!-- <canvas id="{{ widget_id }}-chart"></canvas> -->
-    </div>  <!-- </div> -->
-</div>  <!-- </div> -->
-{% endmacro %}  <!-- {% endmacro %} -->
+{% macro cpu_widget(widget_id='cpu-widget') %}  # {% macro cpu_widget(widget_id='cpu-widget') %}
+<div class="card cpu-card widget clickable-widget" data-widget-id="{{ widget_id }}" data-widget-type="cpu"  # <div class="card cpu-card widget clickable-widget" data-widget-id="{{ widget_id }}" data-widget-type="cpu"
+    onclick="showCPUDetails()">  # onclick="showCPUDetails()">
+    <h2>CPU</h2>  # <h2>CPU</h2>
+    <div class="metric-large">  # <div class="metric-large">
+        <span id="{{ widget_id }}-percent">0</span><span class="unit">%</span>  # <span id="{{ widget_id }}-percent">0</span><span class="unit">%</span>
+    </div>  # </div>
+    <div class="sub-metrics">  # <div class="sub-metrics">
+        <div class="sub-metric">  # <div class="sub-metric">
+            <span class="label">Frequency</span>  # <span class="label">Frequency</span>
+            <span class="value" id="{{ widget_id }}-freq">0 Mhz</span>  # <span class="value" id="{{ widget_id }}-freq">0 Mhz</span>
+        </div>  # </div>
+        <div class="sub-metric">  # <div class="sub-metric">
+            <span class="label">Temperature</span>  # <span class="label">Temperature</span>
+            <span class="value" id="{{ widget_id }}-temp">N/A</span>  # <span class="value" id="{{ widget_id }}-temp">N/A</span>
+        </div>  # </div>
+    </div>  # </div>
+    <div class="chart-container">  # <div class="chart-container">
+        <canvas id="{{ widget_id }}-chart"></canvas>  # <canvas id="{{ widget_id }}-chart"></canvas>
+    </div>  # </div>
+</div>  # </div>
+{% endmacro %}  # {% endmacro %}

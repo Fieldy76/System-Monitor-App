@@ -26,8 +26,12 @@ A comprehensive, production-ready system monitoring web application built with F
 ## ✨ Features
 
 ### 🔍 Real-Time System Monitoring
-- **CPU Monitoring**: Track usage percentage, frequency, and temperature (Celsius/Fahrenheit)
-- **Memory Tracking**: Monitor RAM usage with total, used, and available statistics
+- **CPU Monitoring**: 
+  - Track usage percentage, frequency, and temperature (Celsius/Fahrenheit)
+  - **Interactive Details**: Click on the tile to view top processes sorted by CPU usage
+- **Memory Tracking**: 
+  - Monitor RAM usage with total, used, and available statistics
+  - **Interactive Details**: Click on the tile to view top processes sorted by Memory usage
 - **Disk Usage**: 
   - View usage statistics for all mounted partitions
   - **Interactive Analysis**: Click on any partition to view a breakdown of the largest directories and file counts
@@ -694,14 +698,14 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 For issues and questions:
 
 1. Check existing documentation
-2. Review [GitHub Issues](https://github.com/your-repo/issues)
+2. Review [GitHub Issues](https://github.com/Fieldy76/System-Monitor-App/issues)
 3. Open a new issue with detailed information
 
 ## 🔗 Related Documentation
 
 - [DEPLOYMENT.md](DEPLOYMENT.md) - Detailed deployment guide
-- [API Documentation](docs/API.md) - Complete API reference
-- [Agent Setup](docs/AGENT_SETUP.md) - Multi-server agent configuration
+- [API Documentation](docs/api_documentation.md) - Complete API reference
+- [Agent Setup](docs/agent_setup.md) - Multi-server agent configuration
 
 ---
 

@@ -1,5 +1,6 @@
 {% macro memory_widget(widget_id='memory-widget') %}
-<div class="card memory-card widget" data-widget-id="{{ widget_id }}" data-widget-type="memory">
+<div class="card memory-card widget clickable-widget" data-widget-id="{{ widget_id }}" data-widget-type="memory"
+    onclick="showMemoryDetails()">
     <h2>Memory</h2>
     <div class="metric-large">
         <span id="{{ widget_id }}-percent">0</span><span class="unit">%</span>

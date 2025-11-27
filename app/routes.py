@@ -280,8 +280,15 @@ def disk_io_processes():
             except (psutil.NoSuchProcess, psutil.AccessDenied, AttributeError):
                 continue
         
-        # Sort by total I/O (descending)
-        processes.sort(key=lambda x: x['total_bytes'], reverse=True)
+        # Sort processes
+        sort_by = request.args.get('sort', 'total')
+        
+        if sort_by == 'read':
+            processes.sort(key=lambda x: x['read_bytes'], reverse=True)
+        elif sort_by == 'write':
+            processes.sort(key=lambda x: x['write_bytes'], reverse=True)
+        else:
+            processes.sort(key=lambda x: x['total_bytes'], reverse=True)
         
         # Take top 50 processes
         top_processes = processes[:50]
@@ -472,8 +479,14 @@ def get_processes():
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
         
-        # Sort by CPU usage (descending)
-        processes.sort(key=lambda x: x['cpu_percent'], reverse=True)
+        # Sort processes
+        sort_by = request.args.get('sort', 'cpu')
+        
+        if sort_by == 'memory':
+            processes.sort(key=lambda x: x['memory_percent'], reverse=True)
+        else:
+            # Default to CPU
+            processes.sort(key=lambda x: x['cpu_percent'], reverse=True)
         
         return jsonify({'processes': processes})
     except Exception as e:

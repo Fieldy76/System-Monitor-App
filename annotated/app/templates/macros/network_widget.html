@@ -1,30 +1,30 @@
-{% macro network_widget(widget_id='network-widget') %}  <!-- {% macro network_widget(widget_id='network-widget') %} -->
-<div class="card network-card widget" data-widget-id="{{ widget_id }}" data-widget-type="network">  <!-- <div class="card network-card widget" data-widget-id="{{ widget_id }}" data-widget-type="network"> -->
-    <h2>Network</h2>  <!-- <h2>Network</h2> -->
-    <div class="sub-metrics" style="margin-bottom: 1rem;">  <!-- <div class="sub-metrics" style="margin-bottom: 1rem;"> -->
-        <div class="sub-metric">  <!-- <div class="sub-metric"> -->
-            <span class="label">Sent</span>  <!-- <span class="label">Sent</span> -->
-            <span class="value" id="{{ widget_id }}-sent">0 GB</span>  <!-- <span class="value" id="{{ widget_id }}-sent">0 GB</span> -->
-        </div>  <!-- </div> -->
-        <div class="sub-metric">  <!-- <div class="sub-metric"> -->
-            <span class="label">Received</span>  <!-- <span class="label">Received</span> -->
-            <span class="value" id="{{ widget_id }}-recv">0 GB</span>  <!-- <span class="value" id="{{ widget_id }}-recv">0 GB</span> -->
-        </div>  <!-- </div> -->
-    </div>  <!-- </div> -->
-    <div class="sub-metrics">  <!-- <div class="sub-metrics"> -->
-        <div class="sub-metric">  <!-- <div class="sub-metric"> -->
-            <span class="label">Connections</span>  <!-- <span class="label">Connections</span> -->
-            <span class="value clickable-connection" id="{{ widget_id }}-connections" data-filter="all"  <!-- <span class="value clickable-connection" id="{{ widget_id }}-connections" data-filter="all" -->
-                onclick="showConnectionDetails('all')" title="Click to view all connections">0</span>  <!-- onclick="showConnectionDetails('all')" title="Click to view all connections">0</span> -->
-        </div>  <!-- </div> -->
-        <div class="sub-metric">  <!-- <div class="sub-metric"> -->
-            <span class="label">Established</span>  <!-- <span class="label">Established</span> -->
-            <span class="value clickable-connection" id="{{ widget_id }}-established" data-filter="established"  <!-- <span class="value clickable-connection" id="{{ widget_id }}-established" data-filter="established" -->
-                onclick="showConnectionDetails('ESTABLISHED')" title="Click to view established connections">0</span>  <!-- onclick="showConnectionDetails('ESTABLISHED')" title="Click to view established connections">0</span> -->
-        </div>  <!-- </div> -->
-    </div>  <!-- </div> -->
-    <div class="chart-container" style="margin-top: 1rem;">  <!-- <div class="chart-container" style="margin-top: 1rem;"> -->
-        <canvas id="{{ widget_id }}-chart"></canvas>  <!-- <canvas id="{{ widget_id }}-chart"></canvas> -->
-    </div>  <!-- </div> -->
-</div>  <!-- </div> -->
-{% endmacro %}  <!-- {% endmacro %} -->
+{% macro network_widget(widget_id='network-widget') %}  # {% macro network_widget(widget_id='network-widget') %}
+<div class="card network-card widget" data-widget-id="{{ widget_id }}" data-widget-type="network">  # <div class="card network-card widget" data-widget-id="{{ widget_id }}" data-widget-type="network">
+    <h2>Network</h2>  # <h2>Network</h2>
+    <div class="sub-metrics" style="margin-bottom: 1rem;">  # <div class="sub-metrics" style="margin-bottom: 1rem;">
+        <div class="sub-metric">  # <div class="sub-metric">
+            <span class="label">Sent</span>  # <span class="label">Sent</span>
+            <span class="value" id="{{ widget_id }}-sent">0 GB</span>  # <span class="value" id="{{ widget_id }}-sent">0 GB</span>
+        </div>  # </div>
+        <div class="sub-metric">  # <div class="sub-metric">
+            <span class="label">Received</span>  # <span class="label">Received</span>
+            <span class="value" id="{{ widget_id }}-recv">0 GB</span>  # <span class="value" id="{{ widget_id }}-recv">0 GB</span>
+        </div>  # </div>
+    </div>  # </div>
+    <div class="sub-metrics">  # <div class="sub-metrics">
+        <div class="sub-metric">  # <div class="sub-metric">
+            <span class="label">Connections</span>  # <span class="label">Connections</span>
+            <span class="value clickable-connection" id="{{ widget_id }}-connections" data-filter="all"  # <span class="value clickable-connection" id="{{ widget_id }}-connections" data-filter="all"
+                onclick="showConnectionDetails('all')" title="Click to view all connections">0</span>  # onclick="showConnectionDetails('all')" title="Click to view all connections">0</span>
+        </div>  # </div>
+        <div class="sub-metric">  # <div class="sub-metric">
+            <span class="label">Established</span>  # <span class="label">Established</span>
+            <span class="value clickable-connection" id="{{ widget_id }}-established" data-filter="established"  # <span class="value clickable-connection" id="{{ widget_id }}-established" data-filter="established"
+                onclick="showConnectionDetails('ESTABLISHED')" title="Click to view established connections">0</span>  # onclick="showConnectionDetails('ESTABLISHED')" title="Click to view established connections">0</span>
+        </div>  # </div>
+    </div>  # </div>
+    <div class="chart-container" style="margin-top: 1rem;">  # <div class="chart-container" style="margin-top: 1rem;">
+        <canvas id="{{ widget_id }}-chart"></canvas>  # <canvas id="{{ widget_id }}-chart"></canvas>
+    </div>  # </div>
+</div>  # </div>
+{% endmacro %}  # {% endmacro %}

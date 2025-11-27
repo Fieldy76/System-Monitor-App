@@ -58,6 +58,8 @@
                 <span class="dot"></span> Live
             </div>
 
+            <div id="datetime-display" class="datetime-dashboard"></div>
+
             <div class="dashboard-actions">
                 <button class="btn btn-secondary btn-sm" onclick="resetLayout()">
                     <i class="fas fa-undo"></i> Reset Layout
@@ -73,12 +75,82 @@
         <!-- Widgets will be injected here by Gridstack -->
     </div>
 
+    <!-- CPU Details Modal -->
+    <div id="cpu-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="cpu-modal-title">Top CPU Processes</h2>
+                <div class="modal-controls">
+                    <button class="modal-btn" onclick="toggleMinimize('cpu-modal')"><i
+                            class="fas fa-minus"></i></button>
+                    <button class="modal-btn" onclick="toggleMaximize('cpu-modal')"><i
+                            class="far fa-square"></i></button>
+                    <button class="modal-close" onclick="closeCPUModal()">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <table class="connection-table">
+                    <thead>
+                        <tr>
+                            <th>Process</th>
+                            <th>PID</th>
+                            <th>User</th>
+                            <th>CPU %</th>
+                            <th>Memory %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cpu-table-body">
+                        <!-- Rows inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Memory Details Modal -->
+    <div id="memory-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="memory-modal-title">Top Memory Processes</h2>
+                <div class="modal-controls">
+                    <button class="modal-btn" onclick="toggleMinimize('memory-modal')"><i
+                            class="fas fa-minus"></i></button>
+                    <button class="modal-btn" onclick="toggleMaximize('memory-modal')"><i
+                            class="far fa-square"></i></button>
+                    <button class="modal-close" onclick="closeMemoryModal()">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <table class="connection-table">
+                    <thead>
+                        <tr>
+                            <th>Process</th>
+                            <th>PID</th>
+                            <th>User</th>
+                            <th>Memory %</th>
+                            <th>CPU %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="memory-table-body">
+                        <!-- Rows inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- Network Connections Modal -->
     <div id="connection-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="connection-modal-title">Network Connections</h2>
-                <button class="modal-close" onclick="closeConnectionModal()">&times;</button>
+                <div class="modal-controls">
+                    <button class="modal-btn" onclick="toggleMinimize('connection-modal')"><i
+                            class="fas fa-minus"></i></button>
+                    <button class="modal-btn" onclick="toggleMaximize('connection-modal')"><i
+                            class="far fa-square"></i></button>
+                    <button class="modal-close" onclick="closeConnectionModal()">&times;</button>
+                </div>
             </div>
             <div class="modal-body">
                 <table class="connection-table">
@@ -100,12 +172,18 @@
         </div>
     </div>
 
-    <!-- Disk I/O Process Modal -->
-    <div id="io-modal" class="modal">
-        <div class="modal-content">
+    <!-- Disk I/O Read Process Modal -->
+    <div id="io-read-modal" class="modal">
+        <div class="modal-content" style="top: 150px; left: 150px;">
             <div class="modal-header">
-                <h3 id="io-modal-title">Disk I/O Processes</h3>
-                <span class="modal-close" onclick="closeIOModal()">&times;</span>
+                <h2 id="io-read-modal-title">Disk I/O (Read)</h2>
+                <div class="modal-controls">
+                    <button class="modal-btn" onclick="toggleMinimize('io-read-modal')"><i
+                            class="fas fa-minus"></i></button>
+                    <button class="modal-btn" onclick="toggleMaximize('io-read-modal')"><i
+                            class="far fa-square"></i></button>
+                    <button class="modal-close" onclick="closeIOReadModal()">&times;</button>
+                </div>
             </div>
             <div class="modal-body">
                 <div class="table-responsive">
@@ -115,12 +193,43 @@
                                 <th>Process</th>
                                 <th>PID</th>
                                 <th>Read Bytes</th>
-                                <th>Write Bytes</th>
                                 <th>Read Ops</th>
+                            </tr>
+                        </thead>
+                        <tbody id="io-read-table-body">
+                            <!-- Process rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Disk I/O Write Process Modal -->
+    <div id="io-write-modal" class="modal">
+        <div class="modal-content" style="top: 200px; left: 200px;">
+            <div class="modal-header">
+                <h2 id="io-write-modal-title">Disk I/O (Write)</h2>
+                <div class="modal-controls">
+                    <button class="modal-btn" onclick="toggleMinimize('io-write-modal')"><i
+                            class="fas fa-minus"></i></button>
+                    <button class="modal-btn" onclick="toggleMaximize('io-write-modal')"><i
+                            class="far fa-square"></i></button>
+                    <button class="modal-close" onclick="closeIOWriteModal()">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="connection-table">
+                        <thead>
+                            <tr>
+                                <th>Process</th>
+                                <th>PID</th>
+                                <th>Write Bytes</th>
                                 <th>Write Ops</th>
                             </tr>
                         </thead>
-                        <tbody id="io-table-body">
+                        <tbody id="io-write-table-body">
                             <!-- Process rows will be inserted here -->
                         </tbody>
                     </table>
@@ -133,8 +242,14 @@
     <div id="disk-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="disk-modal-title">Disk Analysis</h3>
-                <span class="modal-close" onclick="closeDiskModal()">&times;</span>
+                <h2 id="disk-modal-title">Disk Analysis</h2>
+                <div class="modal-controls">
+                    <button class="modal-btn" onclick="toggleMinimize('disk-modal')"><i
+                            class="fas fa-minus"></i></button>
+                    <button class="modal-btn" onclick="toggleMaximize('disk-modal')"><i
+                            class="far fa-square"></i></button>
+                    <button class="modal-close" onclick="closeDiskModal()">&times;</button>
+                </div>
             </div>
             <div class="modal-body">
                 <div id="disk-loading" style="text-align: center; padding: 2rem; display: none;">
@@ -513,7 +628,9 @@
                 : `Established Connections (${data.count})`;
 
             // Show modal
-            document.getElementById('connection-modal').style.display = 'flex';
+            const modal = document.getElementById('connection-modal');
+            modal.style.display = 'flex';
+            bringToFront('connection-modal');
         } catch (error) {
             console.error('Error fetching connection details:', error);
             alert('Failed to fetch connection details');
@@ -524,33 +641,112 @@
         document.getElementById('connection-modal').style.display = 'none';
     }
 
-    // Close modal when clicking outside
+    // CPU Details
+    async function showCPUDetails() {
+        const modal = document.getElementById('cpu-modal');
+        const tbody = document.getElementById('cpu-table-body');
+
+        modal.style.display = 'block';
+        bringToFront('cpu-modal');
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Loading...</td></tr>';
+
+        try {
+            const response = await fetch('/api/processes?sort=cpu');
+            const data = await response.json();
+
+            tbody.innerHTML = '';
+
+            if (data.processes && data.processes.length > 0) {
+                // Take top 20
+                data.processes.slice(0, 20).forEach(proc => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><span class="process-name">${proc.name}</span></td>
+                        <td>${proc.pid}</td>
+                        <td>${proc.username}</td>
+                        <td>${proc.cpu_percent.toFixed(1)}%</td>
+                        <td>${proc.memory_percent.toFixed(1)}%</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No processes found</td></tr>';
+            }
+        } catch (error) {
+            console.error('Error fetching CPU details:', error);
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Error loading data</td></tr>';
+        }
+    }
+
+    function closeCPUModal() {
+        document.getElementById('cpu-modal').style.display = 'none';
+    }
+
+    // Memory Details
+    async function showMemoryDetails() {
+        const modal = document.getElementById('memory-modal');
+        const tbody = document.getElementById('memory-table-body');
+
+        modal.style.display = 'block';
+        bringToFront('memory-modal');
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Loading...</td></tr>';
+
+        try {
+            const response = await fetch('/api/processes?sort=memory');
+            const data = await response.json();
+
+            tbody.innerHTML = '';
+
+            if (data.processes && data.processes.length > 0) {
+                // Take top 20
+                data.processes.slice(0, 20).forEach(proc => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><span class="process-name">${proc.name}</span></td>
+                        <td>${proc.pid}</td>
+                        <td>${proc.username}</td>
+                        <td>${proc.memory_percent.toFixed(1)}%</td>
+                        <td>${proc.cpu_percent.toFixed(1)}%</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No processes found</td></tr>';
+            }
+        } catch (error) {
+            console.error('Error fetching Memory details:', error);
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Error loading data</td></tr>';
+        }
+    }
+
+    function closeMemoryModal() {
+        document.getElementById('memory-modal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside - REMOVED for modeless windows
+    // Windows are now closed via the close button only
+    /*
     window.onclick = function (event) {
         const modal = document.getElementById('connection-modal');
         if (event.target == modal) {
             closeConnectionModal();
         }
-        const ioModal = document.getElementById('io-modal');
-        if (event.target == ioModal) {
-            closeIOModal();
-        }
-        const diskModal = document.getElementById('disk-modal');
-        if (event.target == diskModal) {
-            closeDiskModal();
-        }
+        // ... other modals
     }
+    */
 
     // Disk I/O Process Details
-    async function showIOProcessDetails() {
-        const modal = document.getElementById('io-modal');
-        const tbody = document.getElementById('io-table-body');
+    async function showIOReadProcessDetails() {
+        const modal = document.getElementById('io-read-modal');
+        const tbody = document.getElementById('io-read-table-body');
 
         // Show modal immediately
         modal.style.display = 'block';
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Loading...</td></tr>';
+        bringToFront('io-read-modal');
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Loading...</td></tr>';
 
         try {
-            const response = await fetch('/api/disk/io-processes');
+            const response = await fetch('/api/disk/io-processes?sort=read');
             const data = await response.json();
 
             tbody.innerHTML = '';
@@ -562,23 +758,60 @@
                         <td><span class="process-name">${proc.name}</span></td>
                         <td>${proc.pid}</td>
                         <td>${proc.read_bytes_formatted}</td>
-                        <td>${proc.write_bytes_formatted}</td>
                         <td>${proc.read_count}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No active read processes found</td></tr>';
+            }
+        } catch (error) {
+            console.error('Error fetching I/O details:', error);
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--danger);">Error loading data</td></tr>';
+        }
+    }
+
+    async function showIOWriteProcessDetails() {
+        const modal = document.getElementById('io-write-modal');
+        const tbody = document.getElementById('io-write-table-body');
+
+        // Show modal immediately
+        modal.style.display = 'block';
+        bringToFront('io-write-modal');
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Loading...</td></tr>';
+
+        try {
+            const response = await fetch('/api/disk/io-processes?sort=write');
+            const data = await response.json();
+
+            tbody.innerHTML = '';
+
+            if (data.processes && data.processes.length > 0) {
+                data.processes.forEach(proc => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><span class="process-name">${proc.name}</span></td>
+                        <td>${proc.pid}</td>
+                        <td>${proc.write_bytes_formatted}</td>
                         <td>${proc.write_count}</td>
                     `;
                     tbody.appendChild(row);
                 });
             } else {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No active I/O processes found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No active write processes found</td></tr>';
             }
         } catch (error) {
             console.error('Error fetching I/O details:', error);
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--danger);">Error loading data</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--danger);">Error loading data</td></tr>';
         }
     }
 
-    function closeIOModal() {
-        document.getElementById('io-modal').style.display = 'none';
+    function closeIOReadModal() {
+        document.getElementById('io-read-modal').style.display = 'none';
+    }
+
+    function closeIOWriteModal() {
+        document.getElementById('io-write-modal').style.display = 'none';
     }
 
     // Disk Analysis
@@ -591,6 +824,7 @@
 
         title.textContent = `Disk Analysis: ${mountpoint}`;
         modal.style.display = 'block';
+        bringToFront('disk-modal');
         loading.style.display = 'block';
         content.style.display = 'none';
         list.innerHTML = '';
@@ -638,6 +872,97 @@
     function closeDiskModal() {
         document.getElementById('disk-modal').style.display = 'none';
     }
+
+    // Modal State Management (Maximize/Minimize)
+    const modalStates = {};
+
+    function toggleMaximize(modalId) {
+        const modal = document.getElementById(modalId);
+        const content = modal.querySelector('.modal-content');
+        const icon = modal.querySelector('button[onclick^="toggleMaximize"] i');
+
+        if (content.classList.contains('maximized')) {
+            // Restore
+            content.classList.remove('maximized');
+            icon.classList.remove('fa-window-restore');
+            icon.classList.add('fa-square');
+            icon.classList.add('far'); // Regular square
+            icon.classList.remove('fas'); // Solid restore icon
+
+            // Restore position/size if interact.js modified it, or let CSS handle it
+            // For simplicity, we rely on removing the class to revert to CSS defaults or previous interact state
+            // However, interact.js sets inline styles. We might need to clear them or restore them.
+            // A simple approach: clear inline styles related to size/pos when maximizing, restore them when un-maximizing?
+            // Better: Just toggle the class. The class should use !important to override inline styles.
+        } else {
+            // Maximize
+            content.classList.remove('minimized'); // Ensure not minimized
+            content.classList.add('maximized');
+            icon.classList.remove('fa-square');
+            icon.classList.remove('far');
+            icon.classList.add('fa-window-restore');
+            icon.classList.add('fas');
+        }
+        bringToFront(modalId);
+    }
+
+    function toggleMinimize(modalId) {
+        const modal = document.getElementById(modalId);
+        const content = modal.querySelector('.modal-content');
+
+        if (content.classList.contains('minimized')) {
+            // Restore
+            content.classList.remove('minimized');
+            bringToFront(modalId);
+        } else {
+            // Minimize
+            content.classList.remove('maximized'); // Ensure not maximized
+            content.classList.add('minimized');
+        }
+    }
+
+    // Z-Index Management for Multi-Window Support
+    let highestZIndex = 2000;
+
+    function bringToFront(modalId) {
+        const modal = document.getElementById(modalId);
+        // We need to target the .modal-content since the .modal wrapper has pointer-events: none
+        // But wait, the .modal wrapper is what we usually toggle display on.
+        // Actually, for modeless, we might want to apply z-index to the wrapper if they are separate wrappers?
+        // In this app, each modal has its own wrapper: <div id="connection-modal" class="modal">...</div>
+        // So we should increase z-index of the wrapper?
+        // BUT, the wrapper is fixed full screen with pointer-events: none.
+        // The content is what matters.
+        // Let's check style.css: .modal { z-index: 2000; }
+        // If we have multiple .modal wrappers, they stack.
+        // If we want them to reorder, we must change z-index of the .modal wrapper.
+
+        highestZIndex++;
+        modal.style.zIndex = highestZIndex;
+
+        // Visual Distinction: Remove active class from all, add to current
+        document.querySelectorAll('.modal-content').forEach(el => {
+            el.classList.remove('active');
+        });
+
+        const content = modal.querySelector('.modal-content');
+        if (content) {
+            content.classList.add('active');
+        }
+    }
+
+    // Add mousedown listeners to all modal contents to bring to front on click
+    document.addEventListener('DOMContentLoaded', () => {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            const content = modal.querySelector('.modal-content');
+            if (content) {
+                content.addEventListener('mousedown', () => {
+                    bringToFront(modal.id);
+                });
+            }
+        });
+    });
 
 </script>
 {% endblock %}
