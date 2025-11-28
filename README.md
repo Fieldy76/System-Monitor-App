@@ -148,6 +148,7 @@ A comprehensive, production-ready system monitoring web application built with F
 - **Smooth Animations**: Micro-interactions for enhanced UX
 - **Drag-and-Drop Dashboard**: Customizable widget layout using Gridstack.js
 - **Widget Macros**: Reusable, modular dashboard components
+- **Standardized Window Management**: Consistent, draggable, and resizable modals with z-index handling across the application
 
 ## 🖼️ Screenshots
 

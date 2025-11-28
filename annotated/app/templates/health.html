@@ -1,362 +1,383 @@
-{% extends "base.html" %}  <!-- {% extends "base.html" %} -->
-  <!-- blank line -->
-{% block title %}Service Health - System Monitor{% endblock %}  <!-- {% block title %}Service Health - System Monitor{% endblock %} -->
-  <!-- blank line -->
-{% block content %}  <!-- {% block content %} -->
-<div class="container">  <!-- <div class="container"> -->
-    <header>  <!-- <header> -->
-        <h1>Service Health</h1>  <!-- <h1>Service Health</h1> -->
-        <div class="header-actions">  <!-- <div class="header-actions"> -->
-            <button class="btn btn-primary" onclick="openAddServiceModal()">  <!-- <button class="btn btn-primary" onclick="openAddServiceModal()"> -->
-                <i class="fas fa-plus"></i> Add Service  <!-- <i class="fas fa-plus"></i> Add Service -->
-            </button>  <!-- </button> -->
-        </div>  <!-- </div> -->
-    </header>  <!-- </header> -->
-  <!-- blank line -->
-    <div class="health-grid" id="service-list">  <!-- <div class="health-grid" id="service-list"> -->
-        <!-- Services will be loaded here -->  <!-- <!-- Services will be loaded here --> -->
-        <div class="loading-spinner">Loading services...</div>  <!-- <div class="loading-spinner">Loading services...</div> -->
-    </div>  <!-- </div> -->
-</div>  <!-- </div> -->
-  <!-- blank line -->
-<!-- Add/Edit Service Modal -->  <!-- <!-- Add/Edit Service Modal --> -->
-<div id="serviceModal" class="modal">  <!-- <div id="serviceModal" class="modal"> -->
-    <div class="modal-content">  <!-- <div class="modal-content"> -->
-        <div class="modal-header">  <!-- <div class="modal-header"> -->
-            <h2 id="modalTitle">Add Service</h2>  <!-- <h2 id="modalTitle">Add Service</h2> -->
-            <span class="close" onclick="closeServiceModal()">&times;</span>  <!-- <span class="close" onclick="closeServiceModal()">&times;</span> -->
-        </div>  <!-- </div> -->
-        <div class="modal-body">  <!-- <div class="modal-body"> -->
-            <form id="serviceForm">  <!-- <form id="serviceForm"> -->
-                <input type="hidden" id="serviceId">  <!-- <input type="hidden" id="serviceId"> -->
-                <div class="form-group">  <!-- <div class="form-group"> -->
-                    <label for="serviceName">Service Name</label>  <!-- <label for="serviceName">Service Name</label> -->
-                    <input type="text" id="serviceName" required>  <!-- <input type="text" id="serviceName" required> -->
-                </div>  <!-- </div> -->
-                <div class="form-group">  <!-- <div class="form-group"> -->
-                    <label for="serviceUrl">URL</label>  <!-- <label for="serviceUrl">URL</label> -->
-                    <input type="url" id="serviceUrl" required placeholder="https://api.example.com/health">  <!-- <input type="url" id="serviceUrl" required placeholder="https://api.example.com/health"> -->
-                </div>  <!-- </div> -->
-                <div class="form-group">  <!-- <div class="form-group"> -->
-                    <label for="serviceDescription">Description</label>  <!-- <label for="serviceDescription">Description</label> -->
-                    <textarea id="serviceDescription" rows="2"></textarea>  <!-- <textarea id="serviceDescription" rows="2"></textarea> -->
-                </div>  <!-- </div> -->
-                <div class="form-row">  <!-- <div class="form-row"> -->
-                    <div class="form-group">  <!-- <div class="form-group"> -->
-                        <label for="checkInterval">Check Interval (seconds)</label>  <!-- <label for="checkInterval">Check Interval (seconds)</label> -->
-                        <input type="number" id="checkInterval" value="60" min="10">  <!-- <input type="number" id="checkInterval" value="60" min="10"> -->
-                    </div>  <!-- </div> -->
-                    <div class="form-group">  <!-- <div class="form-group"> -->
-                        <label for="timeout">Timeout (seconds)</label>  <!-- <label for="timeout">Timeout (seconds)</label> -->
-                        <input type="number" id="timeout" value="5" min="1">  <!-- <input type="number" id="timeout" value="5" min="1"> -->
-                    </div>  <!-- </div> -->
-                </div>  <!-- </div> -->
-                <div class="form-group checkbox-group">  <!-- <div class="form-group checkbox-group"> -->
-                    <input type="checkbox" id="isActive" checked>  <!-- <input type="checkbox" id="isActive" checked> -->
-                    <label for="isActive">Active Monitoring</label>  <!-- <label for="isActive">Active Monitoring</label> -->
-                </div>  <!-- </div> -->
-                <div class="form-actions">  <!-- <div class="form-actions"> -->
-                    <button type="button" class="btn btn-secondary" onclick="closeServiceModal()">Cancel</button>  <!-- <button type="button" class="btn btn-secondary" onclick="closeServiceModal()">Cancel</button> -->
-                    <button type="submit" class="btn btn-primary">Save Service</button>  <!-- <button type="submit" class="btn btn-primary">Save Service</button> -->
-                </div>  <!-- </div> -->
-            </form>  <!-- </form> -->
-        </div>  <!-- </div> -->
-    </div>  <!-- </div> -->
-</div>  <!-- </div> -->
-  <!-- blank line -->
-<style>  <!-- <style> -->
-    .health-grid {  <!-- .health-grid { -->
-        display: grid;  <!-- display: grid; -->
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));  <!-- grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); -->
-        gap: 1.5rem;  <!-- gap: 1.5rem; -->
-        margin-top: 2rem;  <!-- margin-top: 2rem; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .service-card {  <!-- .service-card { -->
-        background: rgba(30, 41, 59, 0.7);  <!-- background: rgba(30, 41, 59, 0.7); -->
-        border: 1px solid rgba(255, 255, 255, 0.1);  <!-- border: 1px solid rgba(255, 255, 255, 0.1); -->
-        border-radius: 1rem;  <!-- border-radius: 1rem; -->
-        padding: 1.5rem;  <!-- padding: 1.5rem; -->
-        transition: transform 0.2s, box-shadow 0.2s;  <!-- transition: transform 0.2s, box-shadow 0.2s; -->
-        backdrop-filter: blur(10px);  <!-- backdrop-filter: blur(10px); -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .service-card:hover {  <!-- .service-card:hover { -->
-        transform: translateY(-2px);  <!-- transform: translateY(-2px); -->
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);  <!-- box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .service-header {  <!-- .service-header { -->
-        display: flex;  <!-- display: flex; -->
-        justify-content: space-between;  <!-- justify-content: space-between; -->
-        align-items: flex-start;  <!-- align-items: flex-start; -->
-        margin-bottom: 1rem;  <!-- margin-bottom: 1rem; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .service-name {  <!-- .service-name { -->
-        font-size: 1.25rem;  <!-- font-size: 1.25rem; -->
-        font-weight: 600;  <!-- font-weight: 600; -->
-        color: var(--text-primary);  <!-- color: var(--text-primary); -->
-        margin: 0;  <!-- margin: 0; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .service-url {  <!-- .service-url { -->
-        font-size: 0.875rem;  <!-- font-size: 0.875rem; -->
-        color: var(--text-secondary);  <!-- color: var(--text-secondary); -->
-        white-space: nowrap;  <!-- white-space: nowrap; -->
-        overflow: hidden;  <!-- overflow: hidden; -->
-        text-overflow: ellipsis;  <!-- text-overflow: ellipsis; -->
-        display: block;  <!-- display: block; -->
-        margin-top: 0.25rem;  <!-- margin-top: 0.25rem; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .status-badge {  <!-- .status-badge { -->
-        padding: 0.25rem 0.75rem;  <!-- padding: 0.25rem 0.75rem; -->
-        border-radius: 9999px;  <!-- border-radius: 9999px; -->
-        font-size: 0.75rem;  <!-- font-size: 0.75rem; -->
-        font-weight: 600;  <!-- font-weight: 600; -->
-        text-transform: uppercase;  <!-- text-transform: uppercase; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .status-up {  <!-- .status-up { -->
-        background: rgba(34, 197, 94, 0.2);  <!-- background: rgba(34, 197, 94, 0.2); -->
-        color: #4ade80;  <!-- color: #4ade80; -->
-        border: 1px solid rgba(34, 197, 94, 0.3);  <!-- border: 1px solid rgba(34, 197, 94, 0.3); -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .status-down {  <!-- .status-down { -->
-        background: rgba(239, 68, 68, 0.2);  <!-- background: rgba(239, 68, 68, 0.2); -->
-        color: #f87171;  <!-- color: #f87171; -->
-        border: 1px solid rgba(239, 68, 68, 0.3);  <!-- border: 1px solid rgba(239, 68, 68, 0.3); -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .service-metrics {  <!-- .service-metrics { -->
-        display: grid;  <!-- display: grid; -->
-        grid-template-columns: 1fr 1fr;  <!-- grid-template-columns: 1fr 1fr; -->
-        gap: 1rem;  <!-- gap: 1rem; -->
-        margin: 1rem 0;  <!-- margin: 1rem 0; -->
-        padding: 1rem 0;  <!-- padding: 1rem 0; -->
-        border-top: 1px solid rgba(255, 255, 255, 0.1);  <!-- border-top: 1px solid rgba(255, 255, 255, 0.1); -->
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);  <!-- border-bottom: 1px solid rgba(255, 255, 255, 0.1); -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .metric-item {  <!-- .metric-item { -->
-        display: flex;  <!-- display: flex; -->
-        flex-direction: column;  <!-- flex-direction: column; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .metric-label {  <!-- .metric-label { -->
-        font-size: 0.75rem;  <!-- font-size: 0.75rem; -->
-        color: var(--text-secondary);  <!-- color: var(--text-secondary); -->
-        margin-bottom: 0.25rem;  <!-- margin-bottom: 0.25rem; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .metric-value {  <!-- .metric-value { -->
-        font-size: 1rem;  <!-- font-size: 1rem; -->
-        font-weight: 500;  <!-- font-weight: 500; -->
-        color: var(--text-primary);  <!-- color: var(--text-primary); -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .service-footer {  <!-- .service-footer { -->
-        display: flex;  <!-- display: flex; -->
-        justify-content: space-between;  <!-- justify-content: space-between; -->
-        align-items: center;  <!-- align-items: center; -->
-        font-size: 0.75rem;  <!-- font-size: 0.75rem; -->
-        color: var(--text-secondary);  <!-- color: var(--text-secondary); -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .service-actions {  <!-- .service-actions { -->
-        display: flex;  <!-- display: flex; -->
-        gap: 0.5rem;  <!-- gap: 0.5rem; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .action-btn {  <!-- .action-btn { -->
-        background: none;  <!-- background: none; -->
-        border: none;  <!-- border: none; -->
-        color: var(--text-secondary);  <!-- color: var(--text-secondary); -->
-        cursor: pointer;  <!-- cursor: pointer; -->
-        padding: 0.25rem;  <!-- padding: 0.25rem; -->
-        transition: color 0.2s;  <!-- transition: color 0.2s; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .action-btn:hover {  <!-- .action-btn:hover { -->
-        color: var(--text-primary);  <!-- color: var(--text-primary); -->
-    }  <!-- } -->
-  <!-- blank line -->
-    .action-btn.delete:hover {  <!-- .action-btn.delete:hover { -->
-        color: #f87171;  <!-- color: #f87171; -->
-    }  <!-- } -->
-</style>  <!-- </style> -->
-  <!-- blank line -->
-<script>  <!-- <script> -->
-    document.addEventListener('DOMContentLoaded', loadServices);  <!-- document.addEventListener('DOMContentLoaded', loadServices); -->
-  <!-- blank line -->
-    async function loadServices() {  <!-- async function loadServices() { -->
-        try {  <!-- try { -->
-            const response = await fetch('/api/health/services');  <!-- const response = await fetch('/api/health/services'); -->
-            const data = await response.json();  <!-- const data = await response.json(); -->
-  <!-- blank line -->
-            const container = document.getElementById('service-list');  <!-- const container = document.getElementById('service-list'); -->
-            container.innerHTML = '';  <!-- container.innerHTML = ''; -->
-  <!-- blank line -->
-            if (data.services.length === 0) {  <!-- if (data.services.length === 0) { -->
-                container.innerHTML = `  <!-- container.innerHTML = ` -->
-                    <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-secondary);">  <!-- <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-secondary);"> -->
-                        <i class="fas fa-heartbeat" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>  <!-- <i class="fas fa-heartbeat" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i> -->
-                        <p>No services monitored yet.</p>  <!-- <p>No services monitored yet.</p> -->
-                        <button class="btn btn-primary" onclick="openAddServiceModal()" style="margin-top: 1rem;">  <!-- <button class="btn btn-primary" onclick="openAddServiceModal()" style="margin-top: 1rem;"> -->
-                            Add Your First Service  <!-- Add Your First Service -->
-                        </button>  <!-- </button> -->
-                    </div>  <!-- </div> -->
-                `;  <!-- `; -->
-                return;  <!-- return; -->
-            }  <!-- } -->
-  <!-- blank line -->
-            data.services.forEach(service => {  <!-- data.services.forEach(service => { -->
-                const card = createServiceCard(service);  <!-- const card = createServiceCard(service); -->
-                container.appendChild(card);  <!-- container.appendChild(card); -->
-            });  <!-- }); -->
-        } catch (error) {  <!-- } catch (error) { -->
-            console.error('Error loading services:', error);  <!-- console.error('Error loading services:', error); -->
-        }  <!-- } -->
-    }  <!-- } -->
-  <!-- blank line -->
-    function createServiceCard(service) {  <!-- function createServiceCard(service) { -->
-        const div = document.createElement('div');  <!-- const div = document.createElement('div'); -->
-        div.className = 'service-card';  <!-- div.className = 'service-card'; -->
-  <!-- blank line -->
-        const statusClass = service.is_up ? 'status-up' : 'status-down';  <!-- const statusClass = service.is_up ? 'status-up' : 'status-down'; -->
-        const statusText = service.is_up ? 'Operational' : 'Down';  <!-- const statusText = service.is_up ? 'Operational' : 'Down'; -->
-        const responseTime = service.response_time ? `${service.response_time.toFixed(0)}ms` : '-';  <!-- const responseTime = service.response_time ? `${service.response_time.toFixed(0)}ms` : '-'; -->
-        const lastCheck = service.last_check_time ? new Date(service.last_check_time).toLocaleString() : 'Never';  <!-- const lastCheck = service.last_check_time ? new Date(service.last_check_time).toLocaleString() : 'Never'; -->
-  <!-- blank line -->
-        div.innerHTML = `  <!-- div.innerHTML = ` -->
-            <div class="service-header">  <!-- <div class="service-header"> -->
-                <div>  <!-- <div> -->
-                    <h3 class="service-name">${service.name}</h3>  <!-- <h3 class="service-name">${service.name}</h3> -->
-                    <a href="${service.url}" target="_blank" class="service-url">${service.url}</a>  <!-- <a href="${service.url}" target="_blank" class="service-url">${service.url}</a> -->
-                </div>  <!-- </div> -->
-                <span class="status-badge ${statusClass}">${statusText}</span>  <!-- <span class="status-badge ${statusClass}">${statusText}</span> -->
-            </div>  <!-- </div> -->
-            <div class="service-metrics">  <!-- <div class="service-metrics"> -->
-                <div class="metric-item">  <!-- <div class="metric-item"> -->
-                    <span class="metric-label">Response Time</span>  <!-- <span class="metric-label">Response Time</span> -->
-                    <span class="metric-value">${responseTime}</span>  <!-- <span class="metric-value">${responseTime}</span> -->
-                </div>  <!-- </div> -->
-                <div class="metric-item">  <!-- <div class="metric-item"> -->
-                    <span class="metric-label">Status Code</span>  <!-- <span class="metric-label">Status Code</span> -->
-                    <span class="metric-value">${service.status_code || '-'}</span>  <!-- <span class="metric-value">${service.status_code || '-'}</span> -->
-                </div>  <!-- </div> -->
-            </div>  <!-- </div> -->
-            <div class="service-footer">  <!-- <div class="service-footer"> -->
-                <span>Last check: ${lastCheck}</span>  <!-- <span>Last check: ${lastCheck}</span> -->
-                <div class="service-actions">  <!-- <div class="service-actions"> -->
-                    <button class="action-btn" onclick="editService(${service.id})" title="Edit">  <!-- <button class="action-btn" onclick="editService(${service.id})" title="Edit"> -->
-                        <i class="fas fa-edit"></i>  <!-- <i class="fas fa-edit"></i> -->
-                    </button>  <!-- </button> -->
-                    <button class="action-btn delete" onclick="deleteService(${service.id})" title="Delete">  <!-- <button class="action-btn delete" onclick="deleteService(${service.id})" title="Delete"> -->
-                        <i class="fas fa-trash"></i>  <!-- <i class="fas fa-trash"></i> -->
-                    </button>  <!-- </button> -->
-                </div>  <!-- </div> -->
-            </div>  <!-- </div> -->
-        `;  <!-- `; -->
-        return div;  <!-- return div; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    const modal = document.getElementById('serviceModal');  <!-- const modal = document.getElementById('serviceModal'); -->
-    const form = document.getElementById('serviceForm');  <!-- const form = document.getElementById('serviceForm'); -->
-  <!-- blank line -->
-    function openAddServiceModal() {  <!-- function openAddServiceModal() { -->
-        document.getElementById('modalTitle').textContent = 'Add Service';  <!-- document.getElementById('modalTitle').textContent = 'Add Service'; -->
-        document.getElementById('serviceId').value = '';  <!-- document.getElementById('serviceId').value = ''; -->
-        form.reset();  <!-- form.reset(); -->
-        modal.style.display = 'block';  <!-- modal.style.display = 'block'; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    function closeServiceModal() {  <!-- function closeServiceModal() { -->
-        modal.style.display = 'none';  <!-- modal.style.display = 'none'; -->
-    }  <!-- } -->
-  <!-- blank line -->
-    async function editService(id) {  <!-- async function editService(id) { -->
-        // In a real app, we'd fetch the single service details  <!-- // In a real app, we'd fetch the single service details -->
-        // For now, reload list to get data (simplified)  <!-- // For now, reload list to get data (simplified) -->
-        const response = await fetch('/api/health/services');  <!-- const response = await fetch('/api/health/services'); -->
-        const data = await response.json();  <!-- const data = await response.json(); -->
-        const service = data.services.find(s => s.id === id);  <!-- const service = data.services.find(s => s.id === id); -->
-  <!-- blank line -->
-        if (service) {  <!-- if (service) { -->
-            document.getElementById('modalTitle').textContent = 'Edit Service';  <!-- document.getElementById('modalTitle').textContent = 'Edit Service'; -->
-            document.getElementById('serviceId').value = service.id;  <!-- document.getElementById('serviceId').value = service.id; -->
-            document.getElementById('serviceName').value = service.name;  <!-- document.getElementById('serviceName').value = service.name; -->
-            document.getElementById('serviceUrl').value = service.url;  <!-- document.getElementById('serviceUrl').value = service.url; -->
-            document.getElementById('serviceDescription').value = service.description || '';  <!-- document.getElementById('serviceDescription').value = service.description || ''; -->
-            document.getElementById('checkInterval').value = service.check_interval;  <!-- document.getElementById('checkInterval').value = service.check_interval; -->
-            document.getElementById('timeout').value = service.timeout;  <!-- document.getElementById('timeout').value = service.timeout; -->
-            document.getElementById('isActive').checked = service.is_active;  <!-- document.getElementById('isActive').checked = service.is_active; -->
-  <!-- blank line -->
-            modal.style.display = 'block';  <!-- modal.style.display = 'block'; -->
-        }  <!-- } -->
-    }  <!-- } -->
-  <!-- blank line -->
-    async function deleteService(id) {  <!-- async function deleteService(id) { -->
-        if (!confirm('Are you sure you want to delete this service monitor?')) return;  <!-- if (!confirm('Are you sure you want to delete this service monitor?')) return; -->
-  <!-- blank line -->
-        try {  <!-- try { -->
-            const response = await fetch(`/api/health/services/${id}`, {  <!-- const response = await fetch(`/api/health/services/${id}`, { -->
-                method: 'DELETE'  <!-- method: 'DELETE' -->
-            });  <!-- }); -->
-  <!-- blank line -->
-            if (response.ok) {  <!-- if (response.ok) { -->
-                loadServices();  <!-- loadServices(); -->
-            } else {  <!-- } else { -->
-                alert('Failed to delete service');  <!-- alert('Failed to delete service'); -->
-            }  <!-- } -->
-        } catch (error) {  <!-- } catch (error) { -->
-            console.error('Error:', error);  <!-- console.error('Error:', error); -->
-        }  <!-- } -->
-    }  <!-- } -->
-  <!-- blank line -->
-    form.addEventListener('submit', async (e) => {  <!-- form.addEventListener('submit', async (e) => { -->
-        e.preventDefault();  <!-- e.preventDefault(); -->
-  <!-- blank line -->
-        const id = document.getElementById('serviceId').value;  <!-- const id = document.getElementById('serviceId').value; -->
-        const data = {  <!-- const data = { -->
-            name: document.getElementById('serviceName').value,  <!-- name: document.getElementById('serviceName').value, -->
-            url: document.getElementById('serviceUrl').value,  <!-- url: document.getElementById('serviceUrl').value, -->
-            description: document.getElementById('serviceDescription').value,  <!-- description: document.getElementById('serviceDescription').value, -->
-            check_interval: parseInt(document.getElementById('checkInterval').value),  <!-- check_interval: parseInt(document.getElementById('checkInterval').value), -->
-            timeout: parseInt(document.getElementById('timeout').value),  <!-- timeout: parseInt(document.getElementById('timeout').value), -->
-            is_active: document.getElementById('isActive').checked  <!-- is_active: document.getElementById('isActive').checked -->
-        };  <!-- }; -->
-  <!-- blank line -->
-        const url = id ? `/api/health/services/${id}` : '/api/health/services';  <!-- const url = id ? `/api/health/services/${id}` : '/api/health/services'; -->
-        const method = id ? 'PUT' : 'POST';  <!-- const method = id ? 'PUT' : 'POST'; -->
-  <!-- blank line -->
-        try {  <!-- try { -->
-            const response = await fetch(url, {  <!-- const response = await fetch(url, { -->
-                method: method,  <!-- method: method, -->
-                headers: { 'Content-Type': 'application/json' },  <!-- headers: { 'Content-Type': 'application/json' }, -->
-                body: JSON.stringify(data)  <!-- body: JSON.stringify(data) -->
-            });  <!-- }); -->
-  <!-- blank line -->
-            if (response.ok) {  <!-- if (response.ok) { -->
-                closeServiceModal();  <!-- closeServiceModal(); -->
-                loadServices();  <!-- loadServices(); -->
-            } else {  <!-- } else { -->
-                const error = await response.json();  <!-- const error = await response.json(); -->
-                alert(error.error || 'Failed to save service');  <!-- alert(error.error || 'Failed to save service'); -->
-            }  <!-- } -->
-        } catch (error) {  <!-- } catch (error) { -->
-            console.error('Error:', error);  <!-- console.error('Error:', error); -->
-            alert('An error occurred');  <!-- alert('An error occurred'); -->
-        }  <!-- } -->
-    });  <!-- }); -->
-  <!-- blank line -->
-    // Close modal when clicking outside  <!-- // Close modal when clicking outside -->
-    window.onclick = function (event) {  <!-- window.onclick = function (event) { -->
-        if (event.target == modal) {  <!-- if (event.target == modal) { -->
-            closeServiceModal();  <!-- closeServiceModal(); -->
-        }  <!-- } -->
-    }  <!-- } -->
-</script>  <!-- </script> -->
-{% endblock %}  <!-- {% endblock %} -->
+{% extends "base.html" %}
+
+{% block title %}Service Health - System Monitor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>Service Health</h1>
+        <div class="header-actions">
+            <button class="btn btn-primary" onclick="openAddServiceModal()">
+                <i class="fas fa-plus"></i> Add Service
+            </button>
+        </div>
+    </header>
+
+    <div class="health-grid" id="service-list">
+        <!-- Services will be loaded here -->
+        <div class="loading-spinner">Loading services...</div>
+    </div>
+</div>
+
+<!-- Add/Edit Service Modal -->
+<div id="serviceModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Add Service</h2>
+            <div class="window-controls">
+                <button class="control-btn minimize" onclick="toggleMinimize(this)" title="Minimize"><i
+                        class="fa-solid fa-minus"></i></button>
+                <button class="control-btn maximize" onclick="toggleMaximize(this)" title="Maximize"><i
+                        class="fa-regular fa-square"></i></button>
+                <button class="control-btn close" onclick="closeServiceModal()" title="Close"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+        <div class="modal-body">
+            <form id="serviceForm">
+                <input type="hidden" id="serviceId">
+                <div class="form-group">
+                    <label for="serviceName">Service Name</label>
+                    <input type="text" id="serviceName" required>
+                </div>
+                <div class="form-group">
+                    <label for="serviceUrl">URL</label>
+                    <input type="url" id="serviceUrl" required placeholder="https://api.example.com/health">
+                </div>
+                <div class="form-group">
+                    <label for="serviceDescription">Description</label>
+                    <textarea id="serviceDescription" rows="2"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="checkInterval">Check Interval</label>
+                        <select id="checkInterval">
+                            <option value="10">10 seconds</option>
+                            <option value="30">30 seconds</option>
+                            <option value="60" selected>1 minute</option>
+                            <option value="300">5 minutes</option>
+                            <option value="600">10 minutes</option>
+                            <option value="1800">30 minutes</option>
+                            <option value="3600">1 hour</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="timeout">Timeout</label>
+                        <select id="timeout">
+                            <option value="2">2 seconds</option>
+                            <option value="5" selected>5 seconds</option>
+                            <option value="10">10 seconds</option>
+                            <option value="30">30 seconds</option>
+                            <option value="60">60 seconds</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="isActive" checked>
+                    <label for="isActive">Active Monitoring</label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeServiceModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Service</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .health-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .service-card {
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+        backdrop-filter: blur(10px);
+    }
+
+    .service-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .service-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .service-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .service-url {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+        margin-top: 0.25rem;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-up {
+        background: rgba(34, 197, 94, 0.2);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .status-down {
+        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .service-metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin: 1rem 0;
+        padding: 1rem 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .metric-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .metric-label {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+    }
+
+    .metric-value {
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .service-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .service-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0.25rem;
+        transition: color 0.2s;
+    }
+
+    .action-btn:hover {
+        color: var(--text-primary);
+    }
+
+    .action-btn.delete:hover {
+        color: #f87171;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', loadServices);
+
+    async function loadServices() {
+        try {
+            const response = await fetch('/api/health/services');
+            const data = await response.json();
+
+            const container = document.getElementById('service-list');
+            container.innerHTML = '';
+
+            if (data.services.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        <i class="fas fa-heartbeat" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p>No services monitored yet.</p>
+                        <button class="btn btn-primary" onclick="openAddServiceModal()" style="margin-top: 1rem;">
+                            Add Your First Service
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            data.services.forEach(service => {
+                const card = createServiceCard(service);
+                container.appendChild(card);
+            });
+        } catch (error) {
+            console.error('Error loading services:', error);
+        }
+    }
+
+    function createServiceCard(service) {
+        const div = document.createElement('div');
+        div.className = 'service-card';
+
+        const statusClass = service.is_up ? 'status-up' : 'status-down';
+        const statusText = service.is_up ? 'Operational' : 'Down';
+        const responseTime = service.response_time ? `${service.response_time.toFixed(0)}ms` : '-';
+        const lastCheck = service.last_check_time ? new Date(service.last_check_time).toLocaleString() : 'Never';
+
+        div.innerHTML = `
+            <div class="service-header">
+                <div>
+                    <h3 class="service-name">${service.name}</h3>
+                    <a href="${service.url}" target="_blank" class="service-url">${service.url}</a>
+                </div>
+                <span class="status-badge ${statusClass}">${statusText}</span>
+            </div>
+            <div class="service-metrics">
+                <div class="metric-item">
+                    <span class="metric-label">Response Time</span>
+                    <span class="metric-value">${responseTime}</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Status Code</span>
+                    <span class="metric-value">${service.status_code || '-'}</span>
+                </div>
+            </div>
+            <div class="service-footer">
+                <span>Last check: ${lastCheck}</span>
+                <div class="service-actions">
+                    <button class="action-btn" onclick="editService(${service.id})" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete" onclick="deleteService(${service.id})" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        return div;
+    }
+
+    const modal = document.getElementById('serviceModal');
+    const form = document.getElementById('serviceForm');
+
+    function openAddServiceModal() {
+        document.getElementById('modalTitle').textContent = 'Add Service';
+        document.getElementById('serviceId').value = '';
+        form.reset();
+        modal.style.display = 'block';
+    }
+
+    function closeServiceModal() {
+        modal.style.display = 'none';
+    }
+
+    async function editService(id) {
+        // In a real app, we'd fetch the single service details
+        // For now, reload list to get data (simplified)
+        const response = await fetch('/api/health/services');
+        const data = await response.json();
+        const service = data.services.find(s => s.id === id);
+
+        if (service) {
+            document.getElementById('modalTitle').textContent = 'Edit Service';
+            document.getElementById('serviceId').value = service.id;
+            document.getElementById('serviceName').value = service.name;
+            document.getElementById('serviceUrl').value = service.url;
+            document.getElementById('serviceDescription').value = service.description || '';
+            document.getElementById('checkInterval').value = service.check_interval;
+            document.getElementById('timeout').value = service.timeout;
+            document.getElementById('isActive').checked = service.is_active;
+
+            modal.style.display = 'block';
+        }
+    }
+
+    async function deleteService(id) {
+        if (!confirm('Are you sure you want to delete this service monitor?')) return;
+
+        try {
+            const response = await fetch(`/api/health/services/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                loadServices();
+            } else {
+                alert('Failed to delete service');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const id = document.getElementById('serviceId').value;
+        const data = {
+            name: document.getElementById('serviceName').value,
+            url: document.getElementById('serviceUrl').value,
+            description: document.getElementById('serviceDescription').value,
+            check_interval: parseInt(document.getElementById('checkInterval').value),
+            timeout: parseInt(document.getElementById('timeout').value),
+            is_active: document.getElementById('isActive').checked
+        };
+
+        const url = id ? `/api/health/services/${id}` : '/api/health/services';
+        const method = id ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                closeServiceModal();
+                loadServices();
+            } else {
+                const error = await response.json();
+                alert(error.error || 'Failed to save service');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred');
+        }
+    });
+
+    // Close modal when clicking outside
+    window.onclick = function (event) {
+        if (event.target == modal) {
+            closeServiceModal();
+        }
+    }
+</script>
+{% endblock %}

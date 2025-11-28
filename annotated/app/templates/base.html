@@ -1,196 +1,197 @@
-<!DOCTYPE HTML>  # <!DOCTYPE HTML>
-<html lang="en">  # <html lang="en">
+<!DOCTYPE HTML>
+<html lang="en">
 
-<head>  # <head>
-    <meta charset="UTF-8">  # <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">  # <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}System Monitor{% endblock %}</title>  # <title>{% block title %}System Monitor{% endblock %}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">  # <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>  # <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">  # <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2">  # <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">  # <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Interact.js for draggable/resizable modals -->  # <!-- Interact.js for draggable/resizable modals -->
-    <script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.11/dist/interact.min.js"></script>  # <script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.11/dist/interact.min.js"></script>
-    {% block extra_css %}{% endblock %}  # {% block extra_css %}{% endblock %}
-</head>  # </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}System Monitor{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Interact.js for draggable/resizable modals -->
+    <script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.11/dist/interact.min.js"></script>
+    {% block extra_css %}{% endblock %}
+</head>
 
-<body>  # <body>
-    {% if current_user.is_authenticated %}  # {% if current_user.is_authenticated %}
-    <!-- Sidebar Navigation -->  # <!-- Sidebar Navigation -->
-    <nav class="sidebar">  # <nav class="sidebar">
-        <div class="sidebar-header">  # <div class="sidebar-header">
-            <h2>System Monitor</h2>  # <h2>System Monitor</h2>
-        </div>  # </div>
-        <ul class="nav-menu">  # <ul class="nav-menu">
-            <li><a href="{{ url_for('main.index') }}" class="{% if request.endpoint == 'main.index' %}active{% endif %}"  # <li><a href="{{ url_for('main.index') }}" class="{% if request.endpoint == 'main.index' %}active{% endif %}"
-                    data-title="Dashboard">  # data-title="Dashboard">
-                    <i class="fa-solid fa-gauge-high fa-fw icon"></i> <span>Dashboard</span>  # <i class="fa-solid fa-gauge-high fa-fw icon"></i> <span>Dashboard</span>
-                </a></li>  # </a></li>
-            <li><a href="{{ url_for('main.processes') }}"  # <li><a href="{{ url_for('main.processes') }}"
-                    class="{% if request.endpoint == 'main.processes' %}active{% endif %}" data-title="Processes">  # class="{% if request.endpoint == 'main.processes' %}active{% endif %}" data-title="Processes">
-                    <i class="fa-solid fa-microchip fa-fw icon"></i> <span>Processes</span>  # <i class="fa-solid fa-microchip fa-fw icon"></i> <span>Processes</span>
-                </a></li>  # </a></li>
-            <li><a href="{{ url_for('main.alerts_page') }}"  # <li><a href="{{ url_for('main.alerts_page') }}"
-                    class="{% if request.endpoint == 'main.alerts_page' %}active{% endif %}" data-title="Alerts">  # class="{% if request.endpoint == 'main.alerts_page' %}active{% endif %}" data-title="Alerts">
-                    <i class="fa-solid fa-bell fa-fw icon"></i> <span>Alerts</span>  # <i class="fa-solid fa-bell fa-fw icon"></i> <span>Alerts</span>
-                </a></li>  # </a></li>
-            <li><a href="{{ url_for('main.servers_page') }}"  # <li><a href="{{ url_for('main.servers_page') }}"
-                    class="{% if request.endpoint == 'main.servers_page' %}active{% endif %}" data-title="Servers">  # class="{% if request.endpoint == 'main.servers_page' %}active{% endif %}" data-title="Servers">
-                    <i class="fa-solid fa-server fa-fw icon"></i> <span>Servers</span>  # <i class="fa-solid fa-server fa-fw icon"></i> <span>Servers</span>
-                </a></li>  # </a></li>
-            <li><a href="{{ url_for('main.health_dashboard') }}"  # <li><a href="{{ url_for('main.health_dashboard') }}"
-                    class="{% if request.endpoint == 'main.health_dashboard' %}active{% endif %}" data-title="Health">  # class="{% if request.endpoint == 'main.health_dashboard' %}active{% endif %}" data-title="Health">
-                    <i class="fa-solid fa-heart-pulse fa-fw icon"></i> <span>Health</span>  # <i class="fa-solid fa-heart-pulse fa-fw icon"></i> <span>Health</span>
-                </a></li>  # </a></li>
-            <li><a href="{{ url_for('main.settings') }}"  # <li><a href="{{ url_for('main.settings') }}"
-                    class="{% if request.endpoint == 'main.settings' %}active{% endif %}" data-title="Settings">  # class="{% if request.endpoint == 'main.settings' %}active{% endif %}" data-title="Settings">
-                    <i class="fa-solid fa-gear fa-fw icon"></i> <span>Settings</span>  # <i class="fa-solid fa-gear fa-fw icon"></i> <span>Settings</span>
-                </a></li>  # </a></li>
-        </ul>  # </ul>
-        <div class="sidebar-footer">  # <div class="sidebar-footer">
-            <div class="user-info">  # <div class="user-info">
-                <span class="user-name">{{ current_user.username }}</span>  # <span class="user-name">{{ current_user.username }}</span>
-                {% if current_user.is_admin %}<span class="admin-badge">Admin</span>{% endif %}  # {% if current_user.is_admin %}<span class="admin-badge">Admin</span>{% endif %}
-            </div>  # </div>
-            <a href="{{ url_for('auth.profile') }}" class="profile-link" data-title="Profile">  # <a href="{{ url_for('auth.profile') }}" class="profile-link" data-title="Profile">
-                <i class="fa-solid fa-user fa-fw icon"></i> <span>Profile</span>  # <i class="fa-solid fa-user fa-fw icon"></i> <span>Profile</span>
-            </a>  # </a>
-            <a href="{{ url_for('auth.logout') }}" class="logout-link" data-title="Logout">  # <a href="{{ url_for('auth.logout') }}" class="logout-link" data-title="Logout">
-                <i class="fa-solid fa-right-from-bracket fa-fw icon"></i> <span>Logout</span>  # <i class="fa-solid fa-right-from-bracket fa-fw icon"></i> <span>Logout</span>
-            </a>  # </a>
-        </div>  # </div>
-        <div class="sidebar-resizer"></div>  # <div class="sidebar-resizer"></div>
-    </nav>  # </nav>
-    {% endif %}  # {% endif %}
+<body>
+    {% if current_user.is_authenticated %}
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2>System Monitor</h2>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="{{ url_for('main.index') }}" class="{% if request.endpoint == 'main.index' %}active{% endif %}"
+                    data-title="Dashboard">
+                    <i class="fa-solid fa-gauge-high fa-fw icon"></i> <span>Dashboard</span>
+                </a></li>
+            <li><a href="{{ url_for('main.processes') }}"
+                    class="{% if request.endpoint == 'main.processes' %}active{% endif %}" data-title="Processes">
+                    <i class="fa-solid fa-microchip fa-fw icon"></i> <span>Processes</span>
+                </a></li>
+            <li><a href="{{ url_for('main.alerts_page') }}"
+                    class="{% if request.endpoint == 'main.alerts_page' %}active{% endif %}" data-title="Alerts">
+                    <i class="fa-solid fa-bell fa-fw icon"></i> <span>Alerts</span>
+                </a></li>
+            <li><a href="{{ url_for('main.servers_page') }}"
+                    class="{% if request.endpoint == 'main.servers_page' %}active{% endif %}" data-title="Servers">
+                    <i class="fa-solid fa-server fa-fw icon"></i> <span>Servers</span>
+                </a></li>
+            <li><a href="{{ url_for('main.health_dashboard') }}"
+                    class="{% if request.endpoint == 'main.health_dashboard' %}active{% endif %}" data-title="Health">
+                    <i class="fa-solid fa-heart-pulse fa-fw icon"></i> <span>Health</span>
+                </a></li>
+            <li><a href="{{ url_for('main.settings') }}"
+                    class="{% if request.endpoint == 'main.settings' %}active{% endif %}" data-title="Settings">
+                    <i class="fa-solid fa-gear fa-fw icon"></i> <span>Settings</span>
+                </a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <span class="user-name">{{ current_user.username }}</span>
+                {% if current_user.is_admin %}<span class="admin-badge">Admin</span>{% endif %}
+            </div>
+            <a href="{{ url_for('auth.profile') }}" class="profile-link" data-title="Profile">
+                <i class="fa-solid fa-user fa-fw icon"></i> <span>Profile</span>
+            </a>
+            <a href="{{ url_for('auth.logout') }}" class="logout-link" data-title="Logout">
+                <i class="fa-solid fa-right-from-bracket fa-fw icon"></i> <span>Logout</span>
+            </a>
+        </div>
+        <div class="sidebar-resizer"></div>
+    </nav>
+    {% endif %}
 
-    <!-- Main Content -->  # <!-- Main Content -->
-    <div class="main-content {% if not current_user.is_authenticated %}no-sidebar{% endif %}">  # <div class="main-content {% if not current_user.is_authenticated %}no-sidebar{% endif %}">
-        <!-- Flash Messages -->  # <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}  # {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}  # {% if messages %}
-        <div class="flash-messages">  # <div class="flash-messages">
-            {% for category, message in messages %}  # {% for category, message in messages %}
-            <div class="flash-message flash-{{ category }}">  # <div class="flash-message flash-{{ category }}">
-                {{ message }}  # {{ message }}
-                <button class="close-flash" onclick="this.parentElement.remove()">×</button>  # <button class="close-flash" onclick="this.parentElement.remove()">×</button>
-            </div>  # </div>
-            {% endfor %}  # {% endfor %}
-        </div>  # </div>
-        {% endif %}  # {% endif %}
-        {% endwith %}  # {% endwith %}
+    <!-- Main Content -->
+    <div class="main-content {% if not current_user.is_authenticated %}no-sidebar{% endif %}">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">
+                {{ message }}
+                <button class="close-flash" onclick="this.parentElement.remove()">×</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
 
-        {% block content %}{% endblock %}  # {% block content %}{% endblock %}
-    </div>  # </div>
+        {% block content %}{% endblock %}
+    </div>
 
-    <!-- Top bar with date/time removed from fixed position -->  # <!-- Top bar with date/time removed from fixed position -->
+    <!-- Top bar with date/time removed from fixed position -->
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  # <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Initialize Interact.js for modals and datetime -->  # <!-- Initialize Interact.js for modals and datetime -->
-    <script>  # <script>
-        // Draggable & resizable modals  # // Draggable & resizable modals
-        document.addEventListener('DOMContentLoaded', function () {  # document.addEventListener('DOMContentLoaded', function () {
-            interact('.modal-content')  # interact('.modal-content')
-                .draggable({  # .draggable({
-                    allowFrom: '.modal-header',  # allowFrom: '.modal-header',
-                    listeners: {  # listeners: {
-                        move(event) {  # move(event) {
-                            const target = event.target;  # const target = event.target;
-                            const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;  # const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-                            const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;  # const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-                            target.style.transform = `translate(${x}px, ${y}px)`;  # target.style.transform = `translate(${x}px, ${y}px)`;
-                            target.setAttribute('data-x', x);  # target.setAttribute('data-x', x);
-                            target.setAttribute('data-y', y);  # target.setAttribute('data-y', y);
-                        }  # }
-                    }  # }
-                })  # })
-                .resizable({  # .resizable({
-                    edges: { left: true, right: true, bottom: true, top: true },  # edges: { left: true, right: true, bottom: true, top: true },
-                    listeners: {  # listeners: {
-                        move(event) {  # move(event) {
-                            const target = event.target;  # const target = event.target;
-                            let x = (parseFloat(target.getAttribute('data-x')) || 0);  # let x = (parseFloat(target.getAttribute('data-x')) || 0);
-                            let y = (parseFloat(target.getAttribute('data-y')) || 0);  # let y = (parseFloat(target.getAttribute('data-y')) || 0);
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/window-manager.js') }}"></script>
+    <!-- Initialize Interact.js for modals and datetime -->
+    <script>
+        // Draggable & resizable modals
+        document.addEventListener('DOMContentLoaded', function () {
+            interact('.modal-content')
+                .draggable({
+                    allowFrom: '.modal-header',
+                    listeners: {
+                        move(event) {
+                            const target = event.target;
+                            const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                            const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+                            target.style.transform = `translate(${x}px, ${y}px)`;
+                            target.setAttribute('data-x', x);
+                            target.setAttribute('data-y', y);
+                        }
+                    }
+                })
+                .resizable({
+                    edges: { left: true, right: true, bottom: true, top: true },
+                    listeners: {
+                        move(event) {
+                            const target = event.target;
+                            let x = (parseFloat(target.getAttribute('data-x')) || 0);
+                            let y = (parseFloat(target.getAttribute('data-y')) || 0);
 
-                            target.style.width = event.rect.width + 'px';  # target.style.width = event.rect.width + 'px';
-                            target.style.height = event.rect.height + 'px';  # target.style.height = event.rect.height + 'px';
+                            target.style.width = event.rect.width + 'px';
+                            target.style.height = event.rect.height + 'px';
 
-                            x += event.deltaRect.left;  # x += event.deltaRect.left;
-                            y += event.deltaRect.top;  # y += event.deltaRect.top;
+                            x += event.deltaRect.left;
+                            y += event.deltaRect.top;
 
-                            target.style.transform = 'translate(' + x + 'px,' + y + 'px)';  # target.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+                            target.style.transform = 'translate(' + x + 'px,' + y + 'px)';
 
-                            target.setAttribute('data-x', x);  # target.setAttribute('data-x', x);
-                            target.setAttribute('data-y', y);  # target.setAttribute('data-y', y);
-                        }  # }
-                    },  # },
-                    modifiers: [  # modifiers: [
-                        interact.modifiers.restrictSize({  # interact.modifiers.restrictSize({
-                            min: { width: 300, height: 200 }  # min: { width: 300, height: 200 }
-                        })  # })
-                    ]  # ]
-                });  # });
+                            target.setAttribute('data-x', x);
+                            target.setAttribute('data-y', y);
+                        }
+                    },
+                    modifiers: [
+                        interact.modifiers.restrictSize({
+                            min: { width: 300, height: 200 }
+                        })
+                    ]
+                });
 
-            // Vanilla JS Sidebar Resizing  # // Vanilla JS Sidebar Resizing
-            const sidebar = document.querySelector('.sidebar');  # const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('.main-content');  # const mainContent = document.querySelector('.main-content');
-            const resizer = document.querySelector('.sidebar-resizer');  # const resizer = document.querySelector('.sidebar-resizer');
-            let isResizing = false;  # let isResizing = false;
+            // Vanilla JS Sidebar Resizing
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const resizer = document.querySelector('.sidebar-resizer');
+            let isResizing = false;
 
-            if (resizer && sidebar && mainContent) {  # if (resizer && sidebar && mainContent) {
-                resizer.addEventListener('mousedown', (e) => {  # resizer.addEventListener('mousedown', (e) => {
-                    isResizing = true;  # isResizing = true;
-                    document.body.style.cursor = 'col-resize';  # document.body.style.cursor = 'col-resize';
-                    sidebar.classList.add('resizing');  # sidebar.classList.add('resizing');
-                    e.preventDefault(); // Prevent text selection  # e.preventDefault(); // Prevent text selection
-                });  # });
+            if (resizer && sidebar && mainContent) {
+                resizer.addEventListener('mousedown', (e) => {
+                    isResizing = true;
+                    document.body.style.cursor = 'col-resize';
+                    sidebar.classList.add('resizing');
+                    e.preventDefault(); // Prevent text selection
+                });
 
-                document.addEventListener('mousemove', (e) => {  # document.addEventListener('mousemove', (e) => {
-                    if (!isResizing) return;  # if (!isResizing) return;
+                document.addEventListener('mousemove', (e) => {
+                    if (!isResizing) return;
 
-                    let newWidth = e.clientX;  # let newWidth = e.clientX;
-                    // Constrain width  # // Constrain width
-                    if (newWidth < 80) newWidth = 80;  # if (newWidth < 80) newWidth = 80;
-                    if (newWidth > 500) newWidth = 500;  # if (newWidth > 500) newWidth = 500;
+                    let newWidth = e.clientX;
+                    // Constrain width
+                    if (newWidth < 80) newWidth = 80;
+                    if (newWidth > 500) newWidth = 500;
 
-                    sidebar.style.width = `${newWidth}px`;  # sidebar.style.width = `${newWidth}px`;
-                    mainContent.style.marginLeft = `${newWidth}px`;  # mainContent.style.marginLeft = `${newWidth}px`;
+                    sidebar.style.width = `${newWidth}px`;
+                    mainContent.style.marginLeft = `${newWidth}px`;
 
-                    // Collapse logic  # // Collapse logic
-                    if (newWidth <= 100) {  # if (newWidth <= 100) {
-                        sidebar.classList.add('collapsed');  # sidebar.classList.add('collapsed');
-                    } else {  # } else {
-                        sidebar.classList.remove('collapsed');  # sidebar.classList.remove('collapsed');
-                    }  # }
-                });  # });
+                    // Collapse logic
+                    if (newWidth <= 100) {
+                        sidebar.classList.add('collapsed');
+                    } else {
+                        sidebar.classList.remove('collapsed');
+                    }
+                });
 
-                document.addEventListener('mouseup', () => {  # document.addEventListener('mouseup', () => {
-                    if (isResizing) {  # if (isResizing) {
-                        isResizing = false;  # isResizing = false;
-                        document.body.style.cursor = 'default';  # document.body.style.cursor = 'default';
-                        sidebar.classList.remove('resizing');  # sidebar.classList.remove('resizing');
-                    }  # }
-                });  # });
-            }  # }
+                document.addEventListener('mouseup', () => {
+                    if (isResizing) {
+                        isResizing = false;
+                        document.body.style.cursor = 'default';
+                        sidebar.classList.remove('resizing');
+                    }
+                });
+            }
 
-            // Date & Time display  # // Date & Time display
-            function updateDateTime() {  # function updateDateTime() {
-                const now = new Date();  # const now = new Date();
-                const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };  # const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
-                const display = document.getElementById('datetime-display');  # const display = document.getElementById('datetime-display');
-                if (display) {  # if (display) {
-                    // display.textContent = now.toLocaleString(undefined, options);  # // display.textContent = now.toLocaleString(undefined, options);
-                    const dateString = now.toLocaleString(undefined, options);  # const dateString = now.toLocaleString(undefined, options);
-                    // Wrap numbers in span  # // Wrap numbers in span
-                    display.innerHTML = dateString.replace(/\d+/g, '<span class="dt-number">$&</span>');  # display.innerHTML = dateString.replace(/\d+/g, '<span class="dt-number">$&</span>');
-                    display.style.display = 'block'; // Force display  # display.style.display = 'block'; // Force display
-                }  # }
-            }  # }
-            setInterval(updateDateTime, 1000);  # setInterval(updateDateTime, 1000);
-            updateDateTime();  # updateDateTime();
-        });  # });
-    </script>  # </script>
-    {% block extra_js %}{% endblock %}  # {% block extra_js %}{% endblock %}
-</body>  # </body>
+            // Date & Time display
+            function updateDateTime() {
+                const now = new Date();
+                const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                const display = document.getElementById('datetime-display');
+                if (display) {
+                    // display.textContent = now.toLocaleString(undefined, options);
+                    const dateString = now.toLocaleString(undefined, options);
+                    // Wrap numbers in span
+                    display.innerHTML = dateString.replace(/\d+/g, '<span class="dt-number">$&</span>');
+                    display.style.display = 'block'; // Force display
+                }
+            }
+            setInterval(updateDateTime, 1000);
+            updateDateTime();
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
 
-</html>  # </html>
+</html>

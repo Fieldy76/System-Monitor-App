@@ -55,7 +55,16 @@ body {
     z-index: 1000;
     transition: width 0.1s ease;
     /* Smooth width transition */
+    overflow-x: hidden;
+    white-space: nowrap;
 }
+
+.sidebar.resizing {
+    transition: none;
+    pointer-events: none;
+    /* Prevent interacting with sidebar items while resizing */
+}
+
 
 .sidebar-resizer {
     position: absolute;
@@ -128,10 +137,16 @@ body {
 }
 
 /* Sidebar Collapsed State */
-.sidebar.collapsed .nav-menu a span:not(.icon),
-.sidebar.collapsed .sidebar-footer a span {
-    display: none;
+.sidebar.collapsed {
+    overflow: visible !important;
 }
+
+.sidebar.collapsed .nav-menu a span:not(.icon),
+.sidebar.collapsed .sidebar-footer a span,
+.sidebar.collapsed .user-info {
+    display: none !important;
+}
+
 
 .sidebar.collapsed .sidebar-header h2 {
     display: none;
@@ -213,6 +228,34 @@ body {
 .sidebar.collapsed .sidebar-footer a {
     justify-content: center;
 }
+
+/* Tooltips for Collapsed Sidebar */
+.sidebar.collapsed .nav-menu a,
+.sidebar.collapsed .sidebar-footer a {
+    position: relative;
+}
+
+.sidebar.collapsed .nav-menu a:hover::after,
+.sidebar.collapsed .sidebar-footer a:hover::after {
+    content: attr(data-title);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--card-bg);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    white-space: nowrap;
+    z-index: 1002;
+    margin-left: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    font-size: 0.875rem;
+    pointer-events: none;
+    backdrop-filter: blur(12px);
+}
+
 
 /* ============================================================================
    MAIN CONTENT AREA
@@ -361,6 +404,7 @@ body {
 .form-group input[type="email"],
 .form-group input[type="password"],
 .form-group input[type="number"],
+.form-group input[type="url"],
 .form-group select,
 .form-group textarea {
     background: rgba(255, 255, 255, 0.05);
@@ -897,10 +941,40 @@ body::-webkit-scrollbar-thumb {
     -webkit-text-fill-color: transparent;
 }
 
-.modal-controls {
+.modal-controls,
+.window-controls {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+.control-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    /* Brighter than text-secondary but not full white */
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: color 0.2s;
+    font-size: 0.9rem;
+    /* Slightly smaller to match refined look */
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.control-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.control-btn.close:hover {
+    background: var(--danger-color);
+    color: #fff;
 }
 
 .modal-btn {
