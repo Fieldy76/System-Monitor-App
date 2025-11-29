@@ -31,6 +31,7 @@ A comprehensive, production-ready system monitoring web application built with F
   - **Interactive Details**: Click on the tile to view top processes sorted by CPU usage
 - **Memory Tracking**: 
   - Monitor RAM usage with total, used, and available statistics
+  - Track swap memory usage (used/total)
   - **Interactive Details**: Click on the tile to view top processes sorted by Memory usage
 - **Disk Usage**: 
   - View usage statistics for all mounted partitions
@@ -432,7 +433,11 @@ Get real-time system metrics.
   "memory": {
     "total": "16.00GB",
     "used": "7.50GB",
-    "percent": 46.9
+    "percent": 46.9,
+    "swap_total": "4.00GB",
+    "swap_used": "0.00B",
+    "swap_free": "4.00GB",
+    "swap_percent": 0.0
   },
   "network": {
     "bytes_sent": "1.50GB",

@@ -625,6 +625,7 @@
             // Update Memory
             updateText('memory-widget-percent', data.memory.percent.toFixed(1));
             updateText('memory-widget-used', data.memory.used);
+            updateText('memory-widget-swap', `${data.memory.swap_used} / ${data.memory.swap_total}`);
             updateText('memory-widget-total', data.memory.total);
 
             // Update Network

@@ -113,11 +113,16 @@ def metrics():
 
     # Memory usage
     svmem = psutil.virtual_memory()  # Get virtual memory usage
+    swap = psutil.swap_memory()  # Get swap memory usage
     memory_usage = {
         'total': get_size(svmem.total),  # Total memory
         'available': get_size(svmem.available),  # Available memory
         'used': get_size(svmem.used),  # Used memory
-        'percent': svmem.percent  # Memory usage percentage
+        'percent': svmem.percent,  # Memory usage percentage
+        'swap_total': get_size(swap.total),  # Total swap space
+        'swap_used': get_size(swap.used),  # Used swap space
+        'swap_free': get_size(swap.free),  # Free swap space
+        'swap_percent': swap.percent  # Swap usage percentage
     }
 
     # Disk usage
