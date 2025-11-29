@@ -76,6 +76,8 @@ const commonOptions = {
 const cpuCtx = document.getElementById('cpuChart').getContext('2d');
 // Get the 2D context for the Memory chart canvas
 const memoryCtx = document.getElementById('memoryChart').getContext('2d');
+// Get the 2D context for the IO chart canvas
+const ioCtx = document.getElementById('ioChart').getContext('2d');
 
 // Helper function to create a linear gradient for the chart background
 const createGradient = (ctx, colorStart, colorEnd) => {

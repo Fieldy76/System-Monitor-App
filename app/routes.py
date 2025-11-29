@@ -142,6 +142,8 @@ def metrics():
     disk_io_info = {
         'read_bytes': get_size(disk_io.read_bytes),
         'write_bytes': get_size(disk_io.write_bytes),
+        'read_bytes_raw': disk_io.read_bytes,
+        'write_bytes_raw': disk_io.write_bytes,
         'read_count': disk_io.read_count,
         'write_count': disk_io.write_count
     }

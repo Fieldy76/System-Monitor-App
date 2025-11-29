@@ -35,8 +35,10 @@ A comprehensive, production-ready system monitoring web application built with F
 - **Disk Usage**: 
   - View usage statistics for all mounted partitions
   - **Interactive Analysis**: Click on any partition to view a breakdown of the largest directories and file counts
+  - **Visual Usage Bars**: Directory list includes visual progress bars indicating relative size
 - **Disk I/O**: 
   - Track read/write operations and data transfer rates
+  - **Visual Breakdown**: Doughnut chart showing Read vs Write ratio
   - **Process Breakdown**: Click on Read/Write values to see which processes are generating the most I/O load
 - **Network Monitoring**: 
   - Bandwidth usage and packet counts

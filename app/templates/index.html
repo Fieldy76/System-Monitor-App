@@ -37,6 +37,58 @@
         opacity: 0.8;
         z-index: 1000;
     }
+
+    /* Disk Analysis Styles */
+    .directory-item {
+        padding: 0.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .directory-item:last-child {
+        border-bottom: none;
+    }
+
+    .directory-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.25rem;
+    }
+
+    .directory-path {
+        font-weight: 500;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 70%;
+    }
+
+    .directory-size {
+        color: var(--accent-color);
+        font-weight: 600;
+    }
+
+    .directory-bar-bg {
+        height: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-bottom: 0.25rem;
+    }
+
+    .directory-bar-fill {
+        height: 100%;
+        background: var(--accent-color);
+        border-radius: 2px;
+        transition: width 0.3s ease;
+    }
+
+    .directory-meta {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        text-align: right;
+    }
 </style>
 {% endblock %}
 
@@ -309,6 +361,7 @@
     let cpuChart = null;
     let memoryChart = null;
     let networkChart = null;
+    let ioChart = null;
     // Default layout configuration
     const defaultLayout = [
         { x: 0, y: 0, w: 4, h: 4, id: 'cpu', content: document.getElementById('tpl-cpu').innerHTML },
@@ -494,6 +547,55 @@
                 }
             });
         }
+        // Disk I/O Chart
+        const ioCanvas = document.getElementById('io-widget-chart');
+        if (ioCanvas) {
+            if (ioChart) ioChart.destroy();
+            ioChart = new Chart(ioCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Read', 'Write'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: [
+                            'rgba(56, 189, 248, 0.8)', // Sky blue for Read
+                            'rgba(168, 85, 247, 0.8)'  // Purple for Write
+                        ],
+                        borderColor: [
+                            'rgba(56, 189, 248, 1)',
+                            'rgba(168, 85, 247, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    const value = context.raw;
+                                    // Simple formatting for tooltip
+                                    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                                    if (value === 0) return label + '0 Bytes';
+                                    const i = parseInt(Math.floor(Math.log(value) / Math.log(1024)));
+                                    return label + Math.round(value / Math.pow(1024, i), 2) + ' ' + sizes[i];
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
     }
 
@@ -542,6 +644,11 @@
             updateText('io-widget-write', data.io.write_bytes);
             updateText('io-widget-read-count', `${data.io.read_count.toLocaleString()} ops`);
             updateText('io-widget-write-count', `${data.io.write_count.toLocaleString()} ops`);
+
+            if (ioChart) {
+                ioChart.data.datasets[0].data = [data.io.read_bytes_raw, data.io.write_bytes_raw];
+                ioChart.update('none');
+            }
 
             // Update Disk Usage
             const diskList = document.getElementById('disk-widget-list');

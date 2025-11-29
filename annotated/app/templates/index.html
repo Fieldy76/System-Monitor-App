@@ -1,41 +1,141 @@
 {% extends "base.html" %}
+<!-- Extend the base template -->
 {% from 'macros/cpu_widget.html' import cpu_widget %}
+<!-- Import CPU widget macro -->
 {% from 'macros/memory_widget.html' import memory_widget %}
+<!-- Import Memory widget macro -->
 {% from 'macros/network_widget.html' import network_widget %}
+<!-- Import Network widget macro -->
 {% from 'macros/disk_widget.html' import disk_widget %}
+<!-- Import Disk widget macro -->
 {% from 'macros/io_widget.html' import io_widget %}
+<!-- Import IO widget macro -->
 
 {% block title %}Dashboard - System Monitor{% endblock %}
+<!-- Set page title -->
 
 {% block extra_css %}
+<!-- Extra CSS for Gridstack -->
 <link href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" rel="stylesheet" />
 <style>
     .grid-stack {
         background: rgba(255, 255, 255, 0.02);
+        /* Subtle background for grid area */
         border-radius: 1rem;
+        /* Rounded corners */
         min-height: 80vh;
+        /* Minimum height */
     }
 
     .grid-stack-item-content {
         overflow: hidden !important;
+        /* Prevent content overflow */
     }
 
     .widget {
         height: 100%;
+        /* Full height */
         width: 100%;
+        /* Full width */
         display: flex;
+        /* Flexbox layout */
         flex-direction: column;
+        /* Column direction */
     }
 
     .dashboard-actions {
         display: flex;
+        /* Flexbox for actions */
         gap: 1rem;
+        /* Gap between buttons */
         margin-left: auto;
+        /* Push to right */
     }
 
     .grid-stack-item.ui-draggable-dragging {
         opacity: 0.8;
+        /* Transparency when dragging */
         z-index: 1000;
+        /* High z-index */
+    }
+
+    /* Disk Analysis Styles */
+    .directory-item {
+        padding: 0.75rem;
+        /* Padding for directory item */
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        /* Separator line */
+    }
+
+    .directory-item:last-child {
+        border-bottom: none;
+        /* Remove separator for last item */
+    }
+
+    .directory-info {
+        display: flex;
+        /* Flexbox for info */
+        justify-content: space-between;
+        /* Space between path and size */
+        align-items: center;
+        /* Center vertically */
+        margin-bottom: 0.25rem;
+        /* Margin bottom */
+    }
+
+    .directory-path {
+        font-weight: 500;
+        /* Medium font weight */
+        color: var(--text-primary);
+        /* Primary text color */
+        white-space: nowrap;
+        /* No wrap */
+        overflow: hidden;
+        /* Hide overflow */
+        text-overflow: ellipsis;
+        /* Ellipsis for overflow */
+        max-width: 70%;
+        /* Max width */
+    }
+
+    .directory-size {
+        color: var(--accent-color);
+        /* Primary color for size */
+        font-weight: 600;
+        /* Semi-bold font weight */
+    }
+
+    .directory-bar-bg {
+        height: 4px;
+        /* Height of bar background */
+        background: rgba(255, 255, 255, 0.1);
+        /* Background color */
+        border-radius: 2px;
+        /* Rounded corners */
+        overflow: hidden;
+        /* Hide overflow */
+        margin-bottom: 0.25rem;
+        /* Margin bottom */
+    }
+
+    .directory-bar-fill {
+        height: 100%;
+        /* Full height */
+        background: var(--accent-color);
+        /* Primary color for fill */
+        border-radius: 2px;
+        /* Rounded corners */
+        transition: width 0.3s ease;
+        /* Smooth transition */
+    }
+
+    .directory-meta {
+        font-size: 0.75rem;
+        /* Small font size */
+        color: var(--text-secondary);
+        /* Secondary text color */
+        text-align: right;
+        /* Right align */
     }
 </style>
 {% endblock %}
@@ -44,8 +144,10 @@
 <div class="container">
     <header>
         <h1>System Monitor Dashboard</h1>
+        <!-- Page Header -->
         <div style="display: flex; gap: 1rem; align-items: center; width: 100%;">
             {% if servers|length > 1 %}
+            <!-- Show server select if multiple servers -->
             <select id="serverSelect"
                 style="padding: 0.5rem 1rem; border-radius: 0.375rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);">
                 {% for server in servers %}
@@ -56,16 +158,20 @@
 
             <div class="status-indicator">
                 <span class="dot"></span> Live
+                <!-- Live status indicator -->
             </div>
 
             <div id="datetime-display" class="datetime-dashboard"></div>
+            <!-- Date/Time Display -->
 
             <div class="dashboard-actions">
                 <button class="btn btn-secondary btn-sm" onclick="resetLayout()">
                     <i class="fas fa-undo"></i> Reset Layout
+                    <!-- Reset Layout Button -->
                 </button>
                 <button class="btn btn-primary btn-sm" onclick="saveLayout()">
                     <i class="fas fa-save"></i> Save Layout
+                    <!-- Save Layout Button -->
                 </button>
             </div>
         </div>
@@ -277,6 +383,7 @@
 <div id="config-data" data-refresh-interval="{{ preferences.refresh_interval if preferences else 2000 }}"
     data-max-data-points="{{ preferences.chart_data_points if preferences else 60 }}"
     data-server-id="{{ servers[0].id if servers else '' }}" style="display: none;">
+    <!-- Hidden config data for JS -->
 </div>
 
 <!-- Hidden widget templates for Gridstack to use -->
@@ -309,6 +416,8 @@
     let cpuChart = null;
     let memoryChart = null;
     let networkChart = null;
+    let ioChart = null; // Variable for Disk I/O Chart
+
     // Default layout configuration
     const defaultLayout = [
         { x: 0, y: 0, w: 4, h: 4, id: 'cpu', content: document.getElementById('tpl-cpu').innerHTML },
@@ -494,6 +603,55 @@
                 }
             });
         }
+        // Disk I/O Chart
+        const ioCanvas = document.getElementById('io-widget-chart');
+        if (ioCanvas) {
+            if (ioChart) ioChart.destroy();
+            ioChart = new Chart(ioCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Read', 'Write'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: [
+                            'rgba(56, 189, 248, 0.8)', // Sky blue for Read
+                            'rgba(168, 85, 247, 0.8)'  // Purple for Write
+                        ],
+                        borderColor: [
+                            'rgba(56, 189, 248, 1)',
+                            'rgba(168, 85, 247, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    const value = context.raw;
+                                    // Simple formatting for tooltip
+                                    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                                    if (value === 0) return label + '0 Bytes';
+                                    const i = parseInt(Math.floor(Math.log(value) / Math.log(1024)));
+                                    return label + Math.round(value / Math.pow(1024, i), 2) + ' ' + sizes[i];
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
     }
 
@@ -542,6 +700,12 @@
             updateText('io-widget-write', data.io.write_bytes);
             updateText('io-widget-read-count', `${data.io.read_count.toLocaleString()} ops`);
             updateText('io-widget-write-count', `${data.io.write_count.toLocaleString()} ops`);
+
+            if (ioChart) {
+                // Update Disk I/O Chart Data
+                ioChart.data.datasets[0].data = [data.io.read_bytes_raw, data.io.write_bytes_raw];
+                ioChart.update('none');
+            }
 
             // Update Disk Usage
             const diskList = document.getElementById('disk-widget-list');
@@ -880,7 +1044,6 @@
     }
 
     // Modal State Management (Maximize/Minimize)
-
-
+    // ... (rest of the code)
 </script>
 {% endblock %}

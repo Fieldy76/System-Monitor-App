@@ -1,21 +1,38 @@
-{% macro io_widget(widget_id='io-widget') %}  <!-- {% macro io_widget(widget_id='io-widget') %} -->
-<div class="card io-card widget" data-widget-id="{{ widget_id }}" data-widget-type="io">  <!-- <div class="card io-card widget" data-widget-id="{{ widget_id }}" data-widget-type="io"> -->
-    <h2>Disk I/O</h2>  <!-- <h2>Disk I/O</h2> -->
-    <div class="io-grid">  <!-- <div class="io-grid"> -->
-        <div class="io-item clickable-io-item" onclick="showIOProcessDetails()"  <!-- <div class="io-item clickable-io-item" onclick="showIOProcessDetails()" -->
-            title="Click to view processes by I/O activity">  <!-- title="Click to view processes by I/O activity"> -->
-            <span class="label">Read</span>  <!-- <span class="label">Read</span> -->
-            <span class="value" id="{{ widget_id }}-read">0 GB</span>  <!-- <span class="value" id="{{ widget_id }}-read">0 GB</span> -->
-            <small id="{{ widget_id }}-read-count" style="color: var(--text-secondary); font-size: 0.75rem;">0  <!-- <small id="{{ widget_id }}-read-count" style="color: var(--text-secondary); font-size: 0.75rem;">0 -->
-                ops</small>  <!-- ops</small> -->
-        </div>  <!-- </div> -->
-        <div class="io-item clickable-io-item" onclick="showIOProcessDetails()"  <!-- <div class="io-item clickable-io-item" onclick="showIOProcessDetails()" -->
-            title="Click to view processes by I/O activity">  <!-- title="Click to view processes by I/O activity"> -->
-            <span class="label">Write</span>  <!-- <span class="label">Write</span> -->
-            <span class="value" id="{{ widget_id }}-write">0 GB</span>  <!-- <span class="value" id="{{ widget_id }}-write">0 GB</span> -->
-            <small id="{{ widget_id }}-write-count" style="color: var(--text-secondary); font-size: 0.75rem;">0  <!-- <small id="{{ widget_id }}-write-count" style="color: var(--text-secondary); font-size: 0.75rem;">0 -->
-                ops</small>  <!-- ops</small> -->
-        </div>  <!-- </div> -->
-    </div>  <!-- </div> -->
-</div>  <!-- </div> -->
-{% endmacro %}  <!-- {% endmacro %} -->
+{% macro io_widget(widget_id='io-widget') %}
+<!-- Macro to render the Disk I/O widget -->
+<div class="card io-card widget" data-widget-id="{{ widget_id }}" data-widget-type="io">
+    <!-- Card container for the widget -->
+    <h2>Disk I/O</h2>
+    <!-- Widget Title -->
+    <div class="io-grid">
+        <!-- Grid layout for Read/Write stats -->
+        <div class="io-item clickable-io-item" onclick="showIOReadProcessDetails()"
+            title="Click to view processes by I/O activity">
+            <!-- Read stats item, clickable to show details -->
+            <span class="label">Read</span>
+            <!-- Label for Read stats -->
+            <span class="value" id="{{ widget_id }}-read">0 GB</span>
+            <!-- Value placeholder for Read bytes -->
+            <small id="{{ widget_id }}-read-count" style="color: var(--text-secondary); font-size: 0.75rem;">0
+                ops</small>
+            <!-- Small text for Read operations count -->
+        </div>
+        <div class="io-item clickable-io-item" onclick="showIOWriteProcessDetails()"
+            title="Click to view processes by I/O activity">
+            <!-- Write stats item, clickable to show details -->
+            <span class="label">Write</span>
+            <!-- Label for Write stats -->
+            <span class="value" id="{{ widget_id }}-write">0 GB</span>
+            <!-- Value placeholder for Write bytes -->
+            <small id="{{ widget_id }}-write-count" style="color: var(--text-secondary); font-size: 0.75rem;">0
+                ops</small>
+            <!-- Small text for Write operations count -->
+        </div>
+    </div>
+    <div style="flex: 1; min-height: 0; position: relative; margin-top: 1rem;">
+        <!-- Container for the chart, flex to fill remaining space -->
+        <canvas id="{{ widget_id }}-chart"></canvas>
+        <!-- Canvas element for the Disk I/O Doughnut Chart -->
+    </div>
+</div>
+{% endmacro %}
